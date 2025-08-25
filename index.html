@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delux Modpack - GTA V RP Singleplayer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0f172a;
+            --bg-dark: #0a0e1a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        [data-theme="light"] {
+            --bg-dark: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --secondary: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card);
+            color: var(--primary);
+        }
+
+        .login-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Main Content */
+        .main {
+            margin-top: 80px;
+            min-height: calc(100vh - 80px);
+        }
+
+        .section {
+            display: none;
+            padding: 2rem 0;
+            min-height: calc(100vh - 160px);
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--secondary) 100%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+        }
+
+        .file-upload.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Chat */
+        .chat-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .container {
+                padding: 0 16px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                padding: 1rem 16px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section.active {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <span>Delux</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a onclick="showSection('home')">Início</a></li>
+                <li><a onclick="showSection('download')">Download</a></li>
+                <li><a onclick="showSection('support')">Suporte</a></li>
+                <li><a onclick="showSection('bugs')">Bugs</a></li>
+                <li><a onclick="showSection('faq')">FAQ</a></li>
+                <li><a onclick="showSection('chat')">IA Chat</a></li>
+            </ul>
+
+            <div class="user-menu">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                
+                <div id="login-section">
+                    <button class="login-btn" onclick="signIn()">
+                        <i class="fab fa-google"></i> Login
+                    </button>
+                </div>
+
+                <div id="user-section" style="display: none;">
+                    <div class="user-profile" onclick="toggleUserMenu()">
+                        <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                        <span id="user-name"></span>
+                    </div>
+                </div>
+
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="mobile-menu" id="mobile-menu">
+            <div class="mobile-nav-links">
+                <a onclick="showSection('home'); toggleMobileMenu()">Início</a>
+                <a onclick="showSection('download'); toggleMobileMenu()">Download</a>
+                <a onclick="showSection('support'); toggleMobileMenu()">Suporte</a>
+                <a onclick="showSection('bugs'); toggleMobileMenu()">Bugs</a>
+                <a onclick="showSection('faq'); toggleMobileMenu()">FAQ</a>
+                <a onclick="showSection('chat'); toggleMobileMenu()">IA Chat</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <div class="container">
+                    <h1>Delux Modpack</h1>
+                    <p>Um modpack feito para singleplayer que tenta imitar a vida real, como um RP dentro do singleplayer do GTA V</p>
+                    <div class="cta-buttons">
+                        <button class="btn" onclick="showSection('download')">
+                            <i class="fas fa-download"></i>
+                            Download Grátis
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('support')">
+                            <i class="fas fa-headset"></i>
+                            Suporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="download-count">0</div>
+                        <div class="stat-label">Downloads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">Beta 1.0</div>
+                        <div class="stat-label">Versão Atual</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="bug-reports">0</div>
+                        <div class="stat-label">Reports de Bugs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="users-count">0</div>
+                        <div class="stat-label">Usuários Cadastrados</div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-gamepad"></i> Experiência Realista</h3>
+                        <p>Transforme seu GTA V em uma experiência de roleplay completa, com mecânicas realistas e imersivas.</p>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fas fa-cog"></i> Fácil Instalação</h3>
+                        <p>Instalação simples e rápida. Baixe, extraia e jogue. Inclui guia completo de instalação.</p>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fas fa-sync"></i> Atualizações Constantes</h3>
+                        <p>Modpack em constante desenvolvimento com correções de bugs e novas funcionalidades.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section id="download" class="section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Download do Modpack</h2>
+                
+                <div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h3><i class="fas fa-download"></i> Delux Modpack v Beta 1.0</h3>
+                    <p style="margin: 1rem 0;">Baixe a versão mais recente do modpack Delux para GTA V</p>
+                    
+                    <div style="margin: 2rem 0;">
+                        <button class="btn" onclick="downloadMod()" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                            <i class="fas fa-download"></i>
+                            Baixar Modpack
+                        </button>
+                    </div>
+
+                    <div style="background: var(--bg-dark); padding: 1rem; border-radius: 8px; margin-top: 2rem;">
+                        <h4 style="color: var(--warning); margin-bottom: 1rem;"><i class="fas fa-exclamation-triangle"></i> Requisitos do Sistema</h4>
+                        <ul style="text-align: left; color: var(--text-secondary);">
+                            <li>GTA V Original (Steam, Epic Games ou Rockstar)</li>
+                            <li>Windows 10/11 64-bit</li>
+                            <li>8GB RAM (16GB recomendado)</li>
+                            <li>GTX 1060 / RX 580 (mínimo)</li>
+                            <li>10GB espaço livre</li>
+                            <li>Script Hook V instalado</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Support Section -->
+        <section id="support" class="section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Suporte e Contato</h2>
+                
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-envelope"></i> Email</h3>
+                        <p>Para dúvidas, sugestões ou problemas:</p>
+                        <a href="mailto:borgesnatan09@gmail.com" class="btn" style="margin-top: 1rem;">
+                            borgesnatan09@gmail.com
+                        </a>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fab fa-whatsapp"></i> WhatsApp</h3>
+                        <p>Contato direto via WhatsApp:</p>
+                        <a href="https://wa.me/5521992826074" class="btn" style="margin-top: 1rem;" target="_blank">
+                            +55 21 99282-6074
+                        </a>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fab fa-discord"></i> Discord</h3>
+                        <p>Servidor da comunidade:</p>
+                        <button class="btn" style="margin-top: 1rem; opacity: 0.6;" disabled>
+                            Em Breve...
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fab fa-instagram"></i> Instagram</h3>
+                        <p>Siga para novidades:</p>
+                        <a href="https://instagram.com/Ntzinnn87" class="btn" style="margin-top: 1rem;" target="_blank">
+                            @Ntzinnn87
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bug Report Section -->
+        <section id="bugs" class="section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Reportar Bug</h2>
+                
+                <div class="card" style="max-width: 800px; margin: 0 auto;">
+                    <div id="bug-login-required" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-lock" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom: 1rem;">Login Necessário</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Para reportar bugs, você precisa fazer login com sua conta Google.</p>
+                        <button class="btn" onclick="signIn()">
+                            <i class="fab fa-google"></i>
+                            Fazer Login
+                        </button>
+                    </div>
+
+                    <div id="bug-report-form" style="display: none;">
+                        <h3><i class="fas fa-bug"></i> Descreva o problema encontrado</h3>
+                        
+                        <form onsubmit="submitBugReport(event)">
+                            <div class="form-group">
+                                <label class="form-label">Título do Bug *</label>
+                                <input type="text" class="form-input" id="bug-title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Categoria</label>
+                                <select class="form-select" id="bug-category">
+                                    <option value="gameplay">Gameplay</option>
+                                    <option value="graphics">Gráficos</option>
+                                    <option value="performance">Performance</option>
+                                    <option value="installation">Instalação</option>
+                                    <option value="crash">Crash/Erro</option>
+                                    <option value="other">Outro</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Descrição Detalhada *</label>
+                                <textarea class="form-textarea" id="bug-description" rows="5" placeholder="Descreva o bug em detalhes, como reproduzi-lo, quando acontece, etc." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Arquivos (Screenshots, Vídeos, Logs)</label>
+                                <div class="file-upload" onclick="document.getElementById('bug-files').click()">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                    <p>Clique para selecionar arquivos ou arraste aqui</p>
+                                    <p style="font-size: 0.9rem; color: var(--text-secondary);">PNG, JPG, MP4, TXT até 10MB cada</p>
+                                </div>
+                                <input type="file" id="bug-files" multiple accept=".png,.jpg,.jpeg,.mp4,.txt,.log" style="display: none;">
+                                <div id="selected-files"></div>
+                            </div>
+
+                            <button type="submit" class="btn" style="width: 100%;">
+                                <i class="fas fa-paper-plane"></i>
+                                Enviar Report
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bug Reports List -->
+                <div id="bug-reports-list" style="margin-top: 3rem;"></div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Perguntas Frequentes</h2>
+                
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-question-circle"></i> Como entrar em contato com o desenvolvedor?</h3>
+                        <p>Você pode me contatar através do email <strong>borgesnatan09@gmail.com</strong> ou WhatsApp <strong>+55 21 99282-6074</strong>. Também me siga no Instagram <strong>@Ntzinnn87</strong> para novidades!</p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-user"></i> Quem é o desenvolvedor?</h3>
+                        <p>Sou Natan Borges, desenvolvedor independente e apaixonado por GTA V. Criei o modpack Delux para trazer uma experiência de RP realista para o singleplayer.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-download"></i> O modpack é gratuito?</h3>
+                        <p>Sim! O modpack Delux é completamente gratuito. Basta fazer o download e seguir as instruções de instalação incluídas no arquivo.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-cogs"></i> Como instalar o modpack?</h3>
+                        <p>O arquivo de download inclui um guia completo de instalação. É bem simples: extraia os arquivos na pasta do GTA V e certifique-se de ter o Script Hook V instalado.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-sync"></i> Com que frequência o modpack é atualizado?</h3>
+                        <p>Estou sempre trabalhando em melhorias! Atualizações são lançadas regularmente com correções de bugs e novas funcionalidades. Fique atento ao site!</p>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class="fas fa-bug"></i> Encontrei um bug, como reportar?</h3>
+                        <p>Use a seção "Bugs" deste site para reportar problemas. Faça login com sua conta Google e descreva detalhadamente o problema encontrado.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section id="chat" class="section">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Chat com IA</h2>
+                
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h3><i class="fas fa-robot"></i> Assistente Virtual Delux</h3>
+                        <p style="color: var(--text-secondary);">Tire suas dúvidas sobre o modpack</p>
+                    </div>
+                    
+                    <div class="chat-messages">
+                        <div style="text-align: center;">
+                            <i class="fas fa-cog fa-spin" style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                            <h3>EM BREVE...</h3>
+                            <p>Estamos desenvolvendo uma IA personalizada para te ajudar com o modpack!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Google Sign-In Configuration
+        let googleUser = null;
+
+        function initializeGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: '1088181975050-ki1pknaemctiac1gc80s8bt2nu5gub10.apps.googleusercontent.com',
+                callback: handleCredentialResponse
+            });
+        }
+
+        function handleCredentialResponse(response) {
+            const responsePayload = decodeJwtResponse(response.credential);
+            
+            googleUser = {
+                id: responsePayload.sub,
+                name: responsePayload.name,
+                email: responsePayload.email,
+                picture: responsePayload.picture
+            };
+
+            saveUserData(googleUser);
+            updateUI();
+        }
+
+        function decodeJwtResponse(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function signIn() {
+            google.accounts.id.prompt();
+        }
+
+        function signOut() {
+            googleUser = null;
+            localStorage.removeItem('delux_user');
+            updateUI();
+        }
+
+        function saveUserData(user) {
+            localStorage.setItem('delux_user', JSON.stringify(user));
+            updateUserStats();
+        }
+
+        function loadUserData() {
+            const userData = localStorage.getItem('delux_user');
+            if (userData) {
+                googleUser = JSON.parse(userData);
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            const loginSection = document.getElementById('login-section');
+            const userSection = document.getElementById('user-section');
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+
+            if (googleUser) {
+                loginSection.style.display = 'none';
+                userSection.style.display = 'block';
+                userAvatar.src = googleUser.picture;
+                userName.textContent = googleUser.name.split(' ')[0];
+                
+                // Show bug report form
+                document.getElementById('bug-login-required').style.display = 'none';
+                document.getElementById('bug-report-form').style.display = 'block';
+                
+                loadBugReports();
+            } else {
+                loginSection.style.display = 'block';
+                userSection.style.display = 'none';
+                
+                // Hide bug report form
+                document.getElementById('bug-login-required').style.display = 'block';
+                document.getElementById('bug-report-form').style.display = 'none';
+            }
+        }
+
+        function updateUserStats() {
+            const users = JSON.parse(localStorage.getItem('delux_users') || '[]');
+            const userExists = users.find(u => u.id === googleUser.id);
+            
+            if (!userExists) {
+                users.push(googleUser);
+                localStorage.setItem('delux_users', JSON.stringify(users));
+            }
+            
+            document.getElementById('users-count').textContent = users.length;
+        }
+
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('delux_theme', newTheme);
+            
+            const themeIcon = document.getElementById('theme-icon');
+            themeIcon.className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+            
+            if (googleUser) {
+                saveUserPreferences();
+            }
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('delux_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const themeIcon = document.getElementById('theme-icon');
+            themeIcon.className = savedTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function saveUserPreferences() {
+            if (!googleUser) return;
+            
+            const preferences = {
+                theme: document.documentElement.getAttribute('data-theme'),
+                username: googleUser.name
+            };
+            
+            localStorage.setItem(`delux_prefs_${googleUser.id}`, JSON.stringify(preferences));
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.style.display = mobileMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Download Management
+        function downloadMod() {
+            // Increment download counter
+            const currentCount = parseInt(localStorage.getItem('delux_downloads') || '0');
+            const newCount = currentCount + 1;
+            localStorage.setItem('delux_downloads', newCount.toString());
+            document.getElementById('download-count').textContent = newCount;
+            
+            // Create download link for the uploaded file
+            const link = document.createElement('a');
+            link.href = '#'; // This would be replaced with actual file URL
+            link.download = 'Delux_Modpack_Beta_1.0.zip';
+            
+            // Show download started message
+            alert('Download iniciado! Obrigado por baixar o Delux Modpack!');
+            
+            // You would replace this with actual file serving logic
+            console.log('Download started for Delux Modpack');
+        }
+
+        // Bug Report Management
+        function submitBugReport(event) {
+            event.preventDefault();
+            
+            if (!googleUser) {
+                alert('Você precisa estar logado para reportar bugs!');
+                return;
+            }
+            
+            const title = document.getElementById('bug-title').value;
+            const category = document.getElementById('bug-category').value;
+            const description = document.getElementById('bug-description').value;
+            const files = document.getElementById('bug-files').files;
+            
+            const bugReport = {
+                id: Date.now(),
+                userId: googleUser.id,
+                userName: googleUser.name,
+                userAvatar: googleUser.picture,
+                title,
+                category,
+                description,
+                files: Array.from(files).map(f => f.name),
+                timestamp: new Date().toLocaleString('pt-BR'),
+                status: 'Aberto'
+            };
+            
+            // Save bug report
+            const reports = JSON.parse(localStorage.getItem('delux_bug_reports') || '[]');
+            reports.unshift(bugReport);
+            localStorage.setItem('delux_bug_reports', JSON.stringify(reports));
+            
+            // Update bug count
+            document.getElementById('bug-reports').textContent = reports.length;
+            
+            // Clear form
+            document.getElementById('bug-title').value = '';
+            document.getElementById('bug-description').value = '';
+            document.getElementById('bug-files').value = '';
+            document.getElementById('selected-files').innerHTML = '';
+            
+            // Reload bug reports
+            loadBugReports();
+            
+            alert('Bug reportado com sucesso! Obrigado pelo feedback.');
+        }
+
+        function loadBugReports() {
+            const reports = JSON.parse(localStorage.getItem('delux_bug_reports') || '[]');
+            const container = document.getElementById('bug-reports-list');
+            
+            if (reports.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = `
+                <h3 style="color: var(--primary); margin-bottom: 2rem;">
+                    <i class="fas fa-list"></i> Reports Recentes
+                </h3>
+            `;
+            
+            reports.slice(0, 5).forEach(report => {
+                const reportCard = document.createElement('div');
+                reportCard.className = 'card';
+                reportCard.style.marginBottom = '1rem';
+                
+                reportCard.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <img src="${report.userAvatar}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                        <div>
+                            <h4 style="margin: 0; color: var(--primary);">${report.title}</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                                Por ${report.userName} • ${report.timestamp} • ${report.category}
+                            </p>
+                        </div>
+                        <span class="badge" style="background: var(--warning); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: auto;">
+                            ${report.status}
+                        </span>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">${report.description}</p>
+                    ${report.files.length > 0 ? `
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            ${report.files.map(file => `
+                                <span style="background: var(--bg-dark); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">
+                                    <i class="fas fa-paperclip"></i> ${file}
+                                </span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                
+                container.appendChild(reportCard);
+            });
+        }
+
+        // File Upload Handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileUpload = document.querySelector('.file-upload');
+            const fileInput = document.getElementById('bug-files');
+            const selectedFiles = document.getElementById('selected-files');
+            
+            fileUpload.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUpload.classList.add('dragover');
+            });
+            
+            fileUpload.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                fileUpload.classList.remove('dragover');
+            });
+            
+            fileUpload.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUpload.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                displaySelectedFiles();
+            });
+            
+            fileInput.addEventListener('change', displaySelectedFiles);
+            
+            function displaySelectedFiles() {
+                const files = fileInput.files;
+                selectedFiles.innerHTML = '';
+                
+                if (files.length > 0) {
+                    const fileList = Array.from(files).map(file => 
+                        `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                            <span style="font-size: 0.9rem;"><i class="fas fa-file"></i> ${file.name}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">${(file.size / 1024).toFixed(1)} KB</span>
+                        </div>`
+                    ).join('');
+                    
+                    selectedFiles.innerHTML = fileList;
+                }
+            }
+        });
+
+        // Initialize counters
+        function initializeCounters() {
+            const downloads = localStorage.getItem('delux_downloads') || '0';
+            const bugReports = JSON.parse(localStorage.getItem('delux_bug_reports') || '[]');
+            const users = JSON.parse(localStorage.getItem('delux_users') || '[]');
+            
+            document.getElementById('download-count').textContent = downloads;
+            document.getElementById('bug-reports').textContent = bugReports.length;
+            document.getElementById('users-count').textContent = users.length;
+        }
+
+        // User Menu Toggle
+        function toggleUserMenu() {
+            const dropdown = document.createElement('div');
+            dropdown.style.cssText = `
+                position: absolute;
+                top: 60px;
+                right: 20px;
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 1rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+            `;
+            
+            dropdown.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <img src="${googleUser.picture}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <div>
+                        <div style="font-weight: 500;">${googleUser.name}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${googleUser.email}</div>
+                    </div>
+                </div>
+                <button onclick="signOut(); this.parentElement.remove();" style="background: var(--danger); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; width: 100%;">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            `;
+            
+            // Remove existing dropdown
+            const existingDropdown = document.querySelector('[data-dropdown="user"]');
+            if (existingDropdown) {
+                existingDropdown.remove();
+            }
+            
+            dropdown.setAttribute('data-dropdown', 'user');
+            document.body.appendChild(dropdown);
+            
+            // Close dropdown when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.remove();
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('load', function() {
+            loadTheme();
+            loadUserData();
+            initializeCounters();
+            
+            // Initialize Google Sign-In when available
+            if (typeof google !== 'undefined' && google.accounts) {
+                initializeGoogleSignIn();
+            } else {
+                // Retry initialization after a short delay
+                setTimeout(() => {
+                    if (typeof google !== 'undefined' && google.accounts) {
+                        initializeGoogleSignIn();
+                    }
+                }, 1000);
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (mobileMenu.style.display === 'block' && !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                mobileMenu.style.display = 'none';
+            }
+        });
+
+        // Smooth scrolling for better UX
+        document.querySelectorAll('a[onclick]').forEach(link => {
+            link.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
