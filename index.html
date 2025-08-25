@@ -11,7 +11,7 @@
     <!-- Firebase v9 Modular SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, Timestamp, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBQggJQihYFNBqvnA81MH_rkOEptsLfow8",
@@ -35,6 +35,11 @@
         window.firebaseOrderBy = orderBy;
         window.firebaseLimit = limit;
         window.firebaseTimestamp = Timestamp;
+        window.firebaseDoc = doc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseIncrement = increment;
         
         console.log("Firebase inicializado com sucesso!");
     </script>
@@ -875,11 +880,116 @@
                 if (window.firebaseDb) {
                     isFirebaseReady = true;
                     console.log('Firebase pronto para uso!');
+                    initializeGlobalStats();
                 } else {
                     console.log('Firebase não encontrado, usando localStorage como fallback');
                 }
             }, 1000);
         });
+
+        // ============ FUNÇÕES FIREBASE GLOBAIS ============
+
+        // Inicializar estatísticas globais no Firebase
+        async function initializeGlobalStats() {
+            if (!isFirebaseReady || !window.firebaseDb) return;
+            
+            try {
+                const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                const statsSnapshot = await window.firebaseGetDoc(statsDoc);
+                
+                if (!statsSnapshot.exists()) {
+                    // Criar documento de estatísticas se não existir
+                    await window.firebaseSetDoc(statsDoc, {
+                        downloads: 0,
+                        totalUsers: 0,
+                        totalBugReports: 0,
+                        createdAt: window.firebaseTimestamp.now(),
+                        lastUpdated: window.firebaseTimestamp.now()
+                    });
+                    console.log('Estatísticas globais inicializadas no Firebase!');
+                }
+                
+                // Carregar estatísticas do Firebase
+                await loadGlobalStats();
+                
+            } catch (error) {
+                console.error('Erro ao inicializar estatísticas:', error);
+            }
+        }
+
+        // Carregar estatísticas globais do Firebase
+        async function loadGlobalStats() {
+            if (!isFirebaseReady || !window.firebaseDb) {
+                loadLocalStats();
+                return;
+            }
+            
+            try {
+                const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                const statsSnapshot = await window.firebaseGetDoc(statsDoc);
+                
+                if (statsSnapshot.exists()) {
+                    const stats = statsSnapshot.data();
+                    document.getElementById('download-count').textContent = stats.downloads || 0;
+                    document.getElementById('users-count').textContent = stats.totalUsers || 0;
+                    document.getElementById('bug-reports').textContent = stats.totalBugReports || 0;
+                    console.log('Estatísticas carregadas do Firebase:', stats);
+                } else {
+                    loadLocalStats();
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas do Firebase:', error);
+                loadLocalStats();
+            }
+        }
+
+        // Fallback para carregar do localStorage
+        function loadLocalStats() {
+            const downloads = localStorage.getItem('delux_global_downloads') || '0';
+            const bugReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+            const users = JSON.parse(localStorage.getItem('delux_all_users') || '[]');
+            
+            document.getElementById('download-count').textContent = downloads;
+            document.getElementById('bug-reports').textContent = bugReports.length;
+            document.getElementById('users-count').textContent = users.length;
+        }
+
+        // Incrementar downloads no Firebase
+        async function incrementDownloads() {
+            // Atualizar no Firebase primeiro
+            if (isFirebaseReady && window.firebaseDb) {
+                try {
+                    const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                    await window.firebaseUpdateDoc(statsDoc, {
+                        downloads: window.firebaseIncrement(1),
+                        lastUpdated: window.firebaseTimestamp.now()
+                    });
+                    
+                    // Recarregar stats do Firebase
+                    await loadGlobalStats();
+                    console.log('Download incrementado no Firebase!');
+                    
+                } catch (error) {
+                    console.error('Erro ao incrementar download no Firebase:', error);
+                    // Fallback para localStorage
+                    incrementDownloadsLocal();
+                }
+            } else {
+                // Fallback para localStorage
+                incrementDownloadsLocal();
+            }
+        }
+
+        // Fallback para incrementar downloads local
+        function incrementDownloadsLocal() {
+            const currentCount = parseInt(localStorage.getItem('delux_global_downloads') || '0');
+            const newCount = currentCount + 1;
+            localStorage.setItem('delux_global_downloads', newCount.toString());
+            document.getElementById('download-count').textContent = newCount;
+        }
+
+        // ============ GOOGLE SIGN-IN ============
 
         function initializeGoogleSignIn() {
             if (typeof google !== 'undefined' && google.accounts) {
@@ -930,11 +1040,15 @@
             updateUI();
         }
 
+        // Salvar dados do usuário no Firebase
         async function saveUserData(user) {
             try {
                 if (isFirebaseReady && window.firebaseDb) {
-                    // Salvar no Firebase
-                    const userDoc = {
+                    // Verificar se usuário já existe
+                    const userDoc = window.firebaseDoc(window.firebaseDb, 'users', user.id);
+                    const userSnapshot = await window.firebaseGetDoc(userDoc);
+                    
+                    const userData = {
                         id: user.id,
                         name: user.name,
                         email: user.email,
@@ -942,31 +1056,45 @@
                         lastLogin: window.firebaseTimestamp.now()
                     };
                     
-                    await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'users'), userDoc);
-                    console.log('Usuário salvo no Firebase!');
+                    if (!userSnapshot.exists()) {
+                        // Usuário novo - criar documento e incrementar contador
+                        await window.firebaseSetDoc(userDoc, {
+                            ...userData,
+                            createdAt: window.firebaseTimestamp.now()
+                        });
+                        
+                        // Incrementar contador global de usuários
+                        const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                        await window.firebaseUpdateDoc(statsDoc, {
+                            totalUsers: window.firebaseIncrement(1),
+                            lastUpdated: window.firebaseTimestamp.now()
+                        });
+                        
+                        console.log('Novo usuário salvo e contador incrementado!');
+                    } else {
+                        // Usuário existente - apenas atualizar last login
+                        await window.firebaseUpdateDoc(userDoc, {
+                            lastLogin: window.firebaseTimestamp.now()
+                        });
+                        
+                        console.log('Login do usuário existente atualizado!');
+                    }
+                    
+                    // Recarregar estatísticas
+                    await loadGlobalStats();
                 }
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
             }
             
-            // Sempre salvar no localStorage também
-            updateGlobalUserCount(user);
-        }
-        
-        function updateGlobalUserCount(user) {
-            const users = JSON.parse(localStorage.getItem('delux_all_users') || '[]');
-            const userExists = users.find(u => u.id === user.id);
-            
-            if (!userExists) {
-                users.push(user);
-                localStorage.setItem('delux_all_users', JSON.stringify(users));
-            }
-            
-            document.getElementById('users-count').textContent = users.length;
+            // Manter localStorage para dados da sessão atual
+            localStorage.setItem('delux_current_user', JSON.stringify(user));
         }
 
         function loadUserData() {
-            if (googleUser) {
+            const savedUser = localStorage.getItem('delux_current_user');
+            if (savedUser) {
+                googleUser = JSON.parse(savedUser);
                 updateUI();
             }
         }
@@ -1029,14 +1157,6 @@
             mobileMenu.style.display = mobileMenu.style.display === 'block' ? 'none' : 'block';
         }
 
-        // Download Management
-        function incrementDownloads() {
-            const currentCount = parseInt(localStorage.getItem('delux_global_downloads') || '0');
-            const newCount = currentCount + 1;
-            localStorage.setItem('delux_global_downloads', newCount.toString());
-            document.getElementById('download-count').textContent = newCount;
-        }
-
         // Message display function
         function showMessage(text, type = 'success') {
             const container = document.getElementById('message-container');
@@ -1054,7 +1174,8 @@
             }, 5000);
         }
 
-        // Bug Report Management com Firebase melhorado
+        // ============ BUG REPORT MANAGEMENT ============
+
         async function submitBugReport(event) {
             event.preventDefault();
             
@@ -1094,51 +1215,37 @@
                         type: f.type
                     })),
                     status: 'Aberto',
-                    createdAt: new Date().toISOString(),
-                    timestamp: new Date().toLocaleString('pt-BR')
+                    createdAt: window.firebaseTimestamp.now()
                 };
                 
-                let savedToFirebase = false;
-                
-                // Tentar salvar no Firebase primeiro
+                // Salvar no Firebase
                 if (isFirebaseReady && window.firebaseDb) {
-                    try {
-                        const firebaseBugReport = {
-                            ...bugReport,
-                            createdAt: window.firebaseTimestamp.now()
-                        };
-                        
-                        await window.firebaseAddDoc(
-                            window.firebaseCollection(window.firebaseDb, 'bugReports'), 
-                            firebaseBugReport
-                        );
-                        
-                        console.log('Bug report salvo no Firebase com sucesso!');
-                        savedToFirebase = true;
-                        
-                    } catch (firebaseError) {
-                        console.error('Erro ao salvar no Firebase:', firebaseError);
-                    }
+                    await window.firebaseAddDoc(
+                        window.firebaseCollection(window.firebaseDb, 'bugReports'), 
+                        bugReport
+                    );
+                    
+                    // Incrementar contador global de bug reports
+                    const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                    await window.firebaseUpdateDoc(statsDoc, {
+                        totalBugReports: window.firebaseIncrement(1),
+                        lastUpdated: window.firebaseTimestamp.now()
+                    });
+                    
+                    console.log('Bug report salvo no Firebase e contador incrementado!');
+                    
+                    // Recarregar estatísticas e bug reports
+                    await loadGlobalStats();
+                    await loadBugReports();
+                    
+                    showMessage('Bug reportado com sucesso! Obrigado pelo feedback.', 'success');
+                } else {
+                    throw new Error('Firebase não disponível');
                 }
-                
-                // Sempre salvar no localStorage como backup
-                const localReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-                localReports.unshift({...bugReport, id: Date.now()});
-                localStorage.setItem('delux_global_bug_reports', JSON.stringify(localReports));
                 
                 // Limpar formulário
                 document.getElementById('bug-form').reset();
                 document.getElementById('selected-files').innerHTML = '';
-                
-                // Recarregar lista de bugs
-                await loadBugReports();
-                
-                // Mostrar mensagem de sucesso
-                const message = savedToFirebase 
-                    ? 'Bug reportado com sucesso! Obrigado pelo feedback.' 
-                    : 'Bug reportado e salvo localmente! Obrigado pelo feedback.';
-                
-                showMessage(message, 'success');
                 
             } catch (error) {
                 console.error('Erro ao enviar bug report:', error);
@@ -1156,7 +1263,7 @@
             let reports = [];
             
             try {
-                // Tentar carregar do Firebase primeiro
+                // Carregar do Firebase
                 if (isFirebaseReady && window.firebaseDb) {
                     const q = window.firebaseQuery(
                         window.firebaseCollection(window.firebaseDb, 'bugReports'),
@@ -1173,7 +1280,7 @@
                             ...data,
                             timestamp: data.createdAt?.toDate?.() ? 
                                 data.createdAt.toDate().toLocaleString('pt-BR') : 
-                                data.timestamp || 'Data inválida'
+                                'Data inválida'
                         };
                     });
                     
@@ -1181,17 +1288,12 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar do Firebase:', error);
-            }
-            
-            // Se Firebase falhou ou não retornou dados, usar localStorage
-            if (reports.length === 0) {
+                
+                // Fallback para localStorage
                 const localReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
                 reports = localReports.slice(0, 20);
-                console.log(`Carregados ${reports.length} bug reports do localStorage`);
+                console.log(`Carregados ${reports.length} bug reports do localStorage (fallback)`);
             }
-            
-            // Atualizar contador
-            document.getElementById('bug-reports').textContent = reports.length;
             
             if (reports.length === 0) {
                 container.innerHTML = `
@@ -1206,7 +1308,7 @@
             
             container.innerHTML = `
                 <h3 style="color: var(--primary); margin-bottom: 2rem; text-align: center;">
-                    <i class="fas fa-list"></i> Reports Recentes (${reports.length} total)
+                    <i class="fas fa-list"></i> Reports Recentes (${reports.length} exibindo)
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     ${reports.map(report => `
@@ -1304,17 +1406,6 @@
                 }
             }
         });
-
-        // Initialize counters
-        function initializeCounters() {
-            const downloads = localStorage.getItem('delux_global_downloads') || '0';
-            const bugReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-            const users = JSON.parse(localStorage.getItem('delux_all_users') || '[]');
-            
-            document.getElementById('download-count').textContent = downloads;
-            document.getElementById('bug-reports').textContent = bugReports.length;
-            document.getElementById('users-count').textContent = users.length;
-        }
 
         // PIX Donation
         function showPixInfo() {
@@ -1438,20 +1529,27 @@
             }, 100);
         }
 
+        // ============ INICIALIZAÇÃO ============
+
         // Initialize everything when page loads
         window.addEventListener('load', async function() {
             console.log('Página carregada, inicializando...');
             
             loadTheme();
             loadUserData();
-            initializeCounters();
             
             // Initialize Google Sign-In
             setTimeout(initializeGoogleSignIn, 500);
             
-            // Carregar bug reports após um delay para garantir que o Firebase esteja pronto
+            // Aguardar Firebase ficar pronto e então carregar dados
             setTimeout(async () => {
-                await loadBugReports();
+                if (isFirebaseReady) {
+                    await loadGlobalStats();
+                    await loadBugReports();
+                } else {
+                    console.log('Firebase não pronto, usando dados locais');
+                    loadLocalStats();
+                }
             }, 2000);
         });
 
