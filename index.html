@@ -7,14 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Firebase v9 -->
+    
+    <!-- Firebase v9 Modular SDK -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBQggJQihYFNBqvnA81MH_rkOEptsLfow8",
             authDomain: "deluxmodpack.firebaseapp.com",
@@ -25,17 +23,22 @@
             measurementId: "G-TCNJXC3FW3"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const db = getFirestore(app);
         
-        // Make Firebase available globally
-        window.firebase = { app, analytics, db };
+        // Tornar Firebase disponível globalmente
+        window.firebaseDb = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+        window.firebaseLimit = limit;
+        window.firebaseTimestamp = Timestamp;
+        
+        console.log("Firebase inicializado com sucesso!");
     </script>
-    <!-- Firebase Compat for fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-firestore-compat.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -480,6 +483,43 @@
         .section.active {
             animation: fadeIn 0.5s ease-out;
         }
+
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success/Error messages */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
     </style>
 </head>
 <body>
@@ -713,7 +753,9 @@
                     <div id="bug-report-form" style="display: none;">
                         <h3><i class="fas fa-bug"></i> Descreva o problema encontrado</h3>
                         
-                        <form onsubmit="submitBugReport(event)">
+                        <div id="message-container"></div>
+                        
+                        <form onsubmit="submitBugReport(event)" id="bug-form">
                             <div class="form-group">
                                 <label class="form-label">Título do Bug *</label>
                                 <input type="text" class="form-input" id="bug-title" required>
@@ -747,7 +789,7 @@
                                 <div id="selected-files"></div>
                             </div>
 
-                            <button type="submit" class="btn" style="width: 100%;">
+                            <button type="submit" class="btn" style="width: 100%;" id="submit-btn">
                                 <i class="fas fa-paper-plane"></i>
                                 Enviar Report
                             </button>
@@ -825,12 +867,31 @@
     <script>
         // Google Sign-In Configuration
         let googleUser = null;
+        let isFirebaseReady = false;
+
+        // Aguardar Firebase estar pronto
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (window.firebaseDb) {
+                    isFirebaseReady = true;
+                    console.log('Firebase pronto para uso!');
+                } else {
+                    console.log('Firebase não encontrado, usando localStorage como fallback');
+                }
+            }, 1000);
+        });
 
         function initializeGoogleSignIn() {
-            google.accounts.id.initialize({
-                client_id: '1088181975050-ki1pknaemctiac1gc80s8bt2nu5gub10.apps.googleusercontent.com',
-                callback: handleCredentialResponse
-            });
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: '1088181975050-ki1pknaemctiac1gc80s8bt2nu5gub10.apps.googleusercontent.com',
+                    callback: handleCredentialResponse
+                });
+                console.log('Google Sign-In inicializado!');
+            } else {
+                console.log('Google Sign-In não disponível ainda, tentando novamente...');
+                setTimeout(initializeGoogleSignIn, 1000);
+            }
         }
 
         function handleCredentialResponse(response) {
@@ -857,7 +918,11 @@
         }
 
         function signIn() {
-            google.accounts.id.prompt();
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.prompt();
+            } else {
+                showMessage('Serviço de login ainda carregando, tente novamente em alguns segundos.', 'error');
+            }
         }
 
         function signOut() {
@@ -865,8 +930,26 @@
             updateUI();
         }
 
-        function saveUserData(user) {
-            // Save user data and update global user count
+        async function saveUserData(user) {
+            try {
+                if (isFirebaseReady && window.firebaseDb) {
+                    // Salvar no Firebase
+                    const userDoc = {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        picture: user.picture,
+                        lastLogin: window.firebaseTimestamp.now()
+                    };
+                    
+                    await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'users'), userDoc);
+                    console.log('Usuário salvo no Firebase!');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar no Firebase:', error);
+            }
+            
+            // Sempre salvar no localStorage também
             updateGlobalUserCount(user);
         }
         
@@ -883,7 +966,6 @@
         }
 
         function loadUserData() {
-            // Check if user data exists in memory from Google Sign-In
             if (googleUser) {
                 updateUI();
             }
@@ -901,17 +983,14 @@
                 userAvatar.src = googleUser.picture;
                 userName.textContent = googleUser.name.split(' ')[0];
                 
-                // Show bug report form
                 document.getElementById('bug-login-required').style.display = 'none';
                 document.getElementById('bug-report-form').style.display = 'block';
                 
-                // Load all bug reports for everyone to see
                 loadBugReports();
             } else {
                 loginSection.style.display = 'block';
                 userSection.style.display = 'none';
                 
-                // Hide bug report form
                 document.getElementById('bug-login-required').style.display = 'block';
                 document.getElementById('bug-report-form').style.display = 'none';
             }
@@ -958,72 +1037,117 @@
             document.getElementById('download-count').textContent = newCount;
         }
 
-        // Bug Report Management with Firebase
+        // Message display function
+        function showMessage(text, type = 'success') {
+            const container = document.getElementById('message-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            messageDiv.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
+            
+            container.innerHTML = '';
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Bug Report Management com Firebase melhorado
         async function submitBugReport(event) {
             event.preventDefault();
             
             if (!googleUser) {
-                alert('Você precisa estar logado para reportar bugs!');
+                showMessage('Você precisa estar logado para reportar bugs!', 'error');
                 return;
             }
             
-            const title = document.getElementById('bug-title').value;
-            const category = document.getElementById('bug-category').value;
-            const description = document.getElementById('bug-description').value;
-            const files = document.getElementById('bug-files').files;
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.innerHTML;
             
-            const bugReport = {
-                userId: googleUser.id,
-                userName: googleUser.name,
-                userAvatar: googleUser.picture,
-                title,
-                category,
-                description,
-                files: Array.from(files).map(f => f.name),
-                timestamp: new Date().toISOString(),
-                status: 'Aberto',
-                createdAt: new Date()
-            };
+            // Desabilitar botão e mostrar loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading"></div> Enviando...';
             
             try {
-                // Save to Firebase first
-                if (window.firebase && window.firebase.db) {
-                    const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
-                    await addDoc(collection(window.firebase.db, 'bugReports'), bugReport);
-                    console.log('Bug report saved to Firebase');
+                const title = document.getElementById('bug-title').value.trim();
+                const category = document.getElementById('bug-category').value;
+                const description = document.getElementById('bug-description').value.trim();
+                const files = document.getElementById('bug-files').files;
+                
+                if (!title || !description) {
+                    throw new Error('Título e descrição são obrigatórios!');
                 }
                 
-                // Also save locally as fallback
-                const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-                reports.unshift({...bugReport, id: Date.now()});
-                localStorage.setItem('delux_global_bug_reports', JSON.stringify(reports));
+                const bugReport = {
+                    userId: googleUser.id,
+                    userName: googleUser.name,
+                    userEmail: googleUser.email,
+                    userAvatar: googleUser.picture,
+                    title,
+                    category,
+                    description,
+                    files: Array.from(files).map(f => ({
+                        name: f.name,
+                        size: f.size,
+                        type: f.type
+                    })),
+                    status: 'Aberto',
+                    createdAt: new Date().toISOString(),
+                    timestamp: new Date().toLocaleString('pt-BR')
+                };
                 
-                // Clear form
-                document.getElementById('bug-title').value = '';
-                document.getElementById('bug-description').value = '';
-                document.getElementById('bug-files').value = '';
+                let savedToFirebase = false;
+                
+                // Tentar salvar no Firebase primeiro
+                if (isFirebaseReady && window.firebaseDb) {
+                    try {
+                        const firebaseBugReport = {
+                            ...bugReport,
+                            createdAt: window.firebaseTimestamp.now()
+                        };
+                        
+                        await window.firebaseAddDoc(
+                            window.firebaseCollection(window.firebaseDb, 'bugReports'), 
+                            firebaseBugReport
+                        );
+                        
+                        console.log('Bug report salvo no Firebase com sucesso!');
+                        savedToFirebase = true;
+                        
+                    } catch (firebaseError) {
+                        console.error('Erro ao salvar no Firebase:', firebaseError);
+                    }
+                }
+                
+                // Sempre salvar no localStorage como backup
+                const localReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+                localReports.unshift({...bugReport, id: Date.now()});
+                localStorage.setItem('delux_global_bug_reports', JSON.stringify(localReports));
+                
+                // Limpar formulário
+                document.getElementById('bug-form').reset();
                 document.getElementById('selected-files').innerHTML = '';
                 
-                // Reload bug reports
+                // Recarregar lista de bugs
                 await loadBugReports();
                 
-                alert('Bug reportado com sucesso! Obrigado pelo feedback.');
+                // Mostrar mensagem de sucesso
+                const message = savedToFirebase 
+                    ? 'Bug reportado com sucesso! Obrigado pelo feedback.' 
+                    : 'Bug reportado e salvo localmente! Obrigado pelo feedback.';
+                
+                showMessage(message, 'success');
                 
             } catch (error) {
-                console.error('Error saving bug report:', error);
-                // Fallback to localStorage only
-                const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-                reports.unshift({...bugReport, id: Date.now()});
-                localStorage.setItem('delux_global_bug_reports', JSON.stringify(reports));
+                console.error('Erro ao enviar bug report:', error);
+                showMessage(`Erro ao enviar report: ${error.message}`, 'error');
                 
-                // Clear form
-                document.getElementById('bug-title').value = '';
-                document.getElementById('bug-description').value = '';
-                document.getElementById('bug-files').value = '';
-                document.getElementById('selected-files').innerHTML = '';
-                
-                loadBugReports();
-                alert('Bug reportado com sucesso! (salvo localmente)');
+            } finally {
+                // Reabilitar botão
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         }
 
@@ -1032,81 +1156,109 @@
             let reports = [];
             
             try {
-                // Try to load from Firebase first
-                if (window.firebase && window.firebase.db) {
-                    const { getDocs, collection, orderBy, query, limit } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
-                    const q = query(collection(window.firebase.db, 'bugReports'), orderBy('createdAt', 'desc'), limit(10));
-                    const querySnapshot = await getDocs(q);
+                // Tentar carregar do Firebase primeiro
+                if (isFirebaseReady && window.firebaseDb) {
+                    const q = window.firebaseQuery(
+                        window.firebaseCollection(window.firebaseDb, 'bugReports'),
+                        window.firebaseOrderBy('createdAt', 'desc'),
+                        window.firebaseLimit(20)
+                    );
                     
-                    reports = querySnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data(),
-                        timestamp: new Date(doc.data().timestamp).toLocaleString('pt-BR')
-                    }));
+                    const querySnapshot = await window.firebaseGetDocs(q);
                     
-                    console.log(`Loaded ${reports.length} bug reports from Firebase`);
+                    reports = querySnapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            ...data,
+                            timestamp: data.createdAt?.toDate?.() ? 
+                                data.createdAt.toDate().toLocaleString('pt-BR') : 
+                                data.timestamp || 'Data inválida'
+                        };
+                    });
+                    
+                    console.log(`Carregados ${reports.length} bug reports do Firebase`);
                 }
             } catch (error) {
-                console.error('Error loading from Firebase:', error);
+                console.error('Erro ao carregar do Firebase:', error);
             }
             
-            // If Firebase failed or returned no results, fallback to localStorage
+            // Se Firebase falhou ou não retornou dados, usar localStorage
             if (reports.length === 0) {
-                reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-                console.log(`Loaded ${reports.length} bug reports from localStorage (fallback)`);
+                const localReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+                reports = localReports.slice(0, 20);
+                console.log(`Carregados ${reports.length} bug reports do localStorage`);
             }
             
-            // Update bug count
+            // Atualizar contador
             document.getElementById('bug-reports').textContent = reports.length;
             
             if (reports.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        <i class="fas fa-bug" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Nenhum bug reportado ainda. Seja o primeiro a ajudar!</p>
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fas fa-bug" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h3>Nenhum bug reportado ainda</h3>
+                        <p>Seja o primeiro a ajudar reportando problemas!</p>
                     </div>
                 `;
                 return;
             }
             
             container.innerHTML = `
-                <h3 style="color: var(--primary); margin-bottom: 2rem;">
+                <h3 style="color: var(--primary); margin-bottom: 2rem; text-align: center;">
                     <i class="fas fa-list"></i> Reports Recentes (${reports.length} total)
                 </h3>
-            `;
-            
-            reports.slice(0, 10).forEach(report => {
-                const reportCard = document.createElement('div');
-                reportCard.className = 'card';
-                reportCard.style.marginBottom = '1rem';
-                
-                reportCard.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <img src="${report.userAvatar}" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-                        <div>
-                            <h4 style="margin: 0; color: var(--primary);">${report.title}</h4>
-                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
-                                Por ${report.userName} • ${report.timestamp} • ${report.category}
-                            </p>
-                        </div>
-                        <span class="badge" style="background: var(--warning); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: auto;">
-                            ${report.status}
-                        </span>
-                    </div>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">${report.description}</p>
-                    ${report.files && report.files.length > 0 ? `
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            ${report.files.map(file => `
-                                <span style="background: var(--bg-dark); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">
-                                    <i class="fas fa-paperclip"></i> ${file}
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    ${reports.map(report => `
+                        <div class="card" style="margin: 0;">
+                            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+                                <img src="${report.userAvatar || '/api/placeholder/40/40'}" 
+                                     alt="Avatar" 
+                                     style="width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;">
+                                <div style="flex-grow: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 1.1rem;">${report.title}</h4>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                                            <i class="fas fa-user"></i> ${report.userName}
+                                        </span>
+                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                                            <i class="fas fa-clock"></i> ${report.timestamp}
+                                        </span>
+                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                                            <i class="fas fa-tag"></i> ${report.category}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span style="background: var(--warning); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">
+                                    ${report.status}
                                 </span>
-                            `).join('')}
+                            </div>
+                            
+                            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <p style="color: var(--text-primary); margin: 0; line-height: 1.5;">${report.description}</p>
+                            </div>
+                            
+                            ${report.files && report.files.length > 0 ? `
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;">
+                                        <i class="fas fa-paperclip"></i> Arquivos anexados:
+                                    </span>
+                                    ${report.files.map(file => {
+                                        const fileName = typeof file === 'string' ? file : file.name;
+                                        const fileSize = typeof file === 'object' && file.size ? 
+                                            ` (${(file.size / 1024).toFixed(1)}KB)` : '';
+                                        return `
+                                            <span style="background: var(--bg-card); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">
+                                                <i class="fas fa-file"></i> ${fileName}${fileSize}
+                                            </span>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            ` : ''}
                         </div>
-                    ` : ''}
-                `;
-                
-                container.appendChild(reportCard);
-            });
+                    `).join('')}
+                </div>
+            `;
         }
 
         // File Upload Handler
@@ -1141,8 +1293,8 @@
                     
                     if (files.length > 0) {
                         const fileList = Array.from(files).map(file => 
-                            `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-                                <span style="font-size: 0.9rem;"><i class="fas fa-file"></i> ${file.name}</span>
+                            `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border: 1px solid var(--border);">
+                                <span style="font-size: 0.9rem; color: var(--text-primary);"><i class="fas fa-file"></i> ${file.name}</span>
                                 <span style="font-size: 0.8rem; color: var(--text-secondary);">${(file.size / 1024).toFixed(1)} KB</span>
                             </div>`
                         ).join('');
@@ -1230,7 +1382,6 @@
             navigator.clipboard.writeText(key).then(() => {
                 alert('Chave PIX copiada! Cole no seu app de pagamentos.');
             }).catch(() => {
-                // Fallback for older browsers
                 const textArea = document.createElement('textarea');
                 textArea.value = key;
                 document.body.appendChild(textArea);
@@ -1269,7 +1420,6 @@
                 </button>
             `;
             
-            // Remove existing dropdown
             const existingDropdown = document.querySelector('[data-dropdown="user"]');
             if (existingDropdown) {
                 existingDropdown.remove();
@@ -1278,7 +1428,6 @@
             dropdown.setAttribute('data-dropdown', 'user');
             document.body.appendChild(dropdown);
             
-            // Close dropdown when clicking outside
             setTimeout(() => {
                 document.addEventListener('click', function closeDropdown(e) {
                     if (!dropdown.contains(e.target)) {
@@ -1291,27 +1440,19 @@
 
         // Initialize everything when page loads
         window.addEventListener('load', async function() {
+            console.log('Página carregada, inicializando...');
+            
             loadTheme();
             loadUserData();
-            await initializeCounters();
+            initializeCounters();
             
-            // Initialize Google Sign-In when available
-            if (typeof google !== 'undefined' && google.accounts) {
-                initializeGoogleSignIn();
-            } else {
-                // Retry initialization after a short delay
-                setTimeout(() => {
-                    if (typeof google !== 'undefined' && google.accounts) {
-                        initializeGoogleSignIn();
-                    }
-                }, 1000);
-            }
-
-            // Firebase initialization check and load bug reports
-            if (window.firebase) {
-                console.log('Firebase initialized successfully!');
+            // Initialize Google Sign-In
+            setTimeout(initializeGoogleSignIn, 500);
+            
+            // Carregar bug reports após um delay para garantir que o Firebase esteja pronto
+            setTimeout(async () => {
                 await loadBugReports();
-            }
+            }, 2000);
         });
 
         // Close mobile menu when clicking outside
