@@ -958,8 +958,8 @@
             document.getElementById('download-count').textContent = newCount;
         }
 
-        // Bug Report Management
-        function submitBugReport(event) {
+        // Bug Report Management with Firebase
+        async function submitBugReport(event) {
             event.preventDefault();
             
             if (!googleUser) {
@@ -973,7 +973,6 @@
             const files = document.getElementById('bug-files').files;
             
             const bugReport = {
-                id: Date.now(),
                 userId: googleUser.id,
                 userName: googleUser.name,
                 userAvatar: googleUser.picture,
@@ -981,46 +980,102 @@
                 category,
                 description,
                 files: Array.from(files).map(f => f.name),
-                timestamp: new Date().toLocaleString('pt-BR'),
-                status: 'Aberto'
+                timestamp: new Date().toISOString(),
+                status: 'Aberto',
+                createdAt: new Date()
             };
             
-            // Save bug report to global storage (visible to everyone)
-            const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-            reports.unshift(bugReport);
-            localStorage.setItem('delux_global_bug_reports', JSON.stringify(reports));
-            
-            // Update global bug count
-            document.getElementById('bug-reports').textContent = reports.length;
-            
-            // Clear form
-            document.getElementById('bug-title').value = '';
-            document.getElementById('bug-description').value = '';
-            document.getElementById('bug-files').value = '';
-            document.getElementById('selected-files').innerHTML = '';
-            
-            // Reload bug reports
-            loadBugReports();
-            
-            alert('Bug reportado com sucesso! Obrigado pelo feedback.');
+            try {
+                // Save to Firebase first
+                if (window.firebase && window.firebase.db) {
+                    const { addDoc, collection } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
+                    await addDoc(collection(window.firebase.db, 'bugReports'), bugReport);
+                    console.log('Bug report saved to Firebase');
+                }
+                
+                // Also save locally as fallback
+                const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+                reports.unshift({...bugReport, id: Date.now()});
+                localStorage.setItem('delux_global_bug_reports', JSON.stringify(reports));
+                
+                // Clear form
+                document.getElementById('bug-title').value = '';
+                document.getElementById('bug-description').value = '';
+                document.getElementById('bug-files').value = '';
+                document.getElementById('selected-files').innerHTML = '';
+                
+                // Reload bug reports
+                await loadBugReports();
+                
+                alert('Bug reportado com sucesso! Obrigado pelo feedback.');
+                
+            } catch (error) {
+                console.error('Error saving bug report:', error);
+                // Fallback to localStorage only
+                const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+                reports.unshift({...bugReport, id: Date.now()});
+                localStorage.setItem('delux_global_bug_reports', JSON.stringify(reports));
+                
+                // Clear form
+                document.getElementById('bug-title').value = '';
+                document.getElementById('bug-description').value = '';
+                document.getElementById('bug-files').value = '';
+                document.getElementById('selected-files').innerHTML = '';
+                
+                loadBugReports();
+                alert('Bug reportado com sucesso! (salvo localmente)');
+            }
         }
 
-        function loadBugReports() {
-            const reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+        async function loadBugReports() {
             const container = document.getElementById('bug-reports-list');
+            let reports = [];
+            
+            try {
+                // Try to load from Firebase first
+                if (window.firebase && window.firebase.db) {
+                    const { getDocs, collection, orderBy, query, limit } = await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
+                    const q = query(collection(window.firebase.db, 'bugReports'), orderBy('createdAt', 'desc'), limit(10));
+                    const querySnapshot = await getDocs(q);
+                    
+                    reports = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        timestamp: new Date(doc.data().timestamp).toLocaleString('pt-BR')
+                    }));
+                    
+                    console.log(`Loaded ${reports.length} bug reports from Firebase`);
+                }
+            } catch (error) {
+                console.error('Error loading from Firebase:', error);
+            }
+            
+            // If Firebase failed or returned no results, fallback to localStorage
+            if (reports.length === 0) {
+                reports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
+                console.log(`Loaded ${reports.length} bug reports from localStorage (fallback)`);
+            }
+            
+            // Update bug count
+            document.getElementById('bug-reports').textContent = reports.length;
             
             if (reports.length === 0) {
-                container.innerHTML = '';
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-bug" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Nenhum bug reportado ainda. Seja o primeiro a ajudar!</p>
+                    </div>
+                `;
                 return;
             }
             
             container.innerHTML = `
                 <h3 style="color: var(--primary); margin-bottom: 2rem;">
-                    <i class="fas fa-list"></i> Reports Recentes
+                    <i class="fas fa-list"></i> Reports Recentes (${reports.length} total)
                 </h3>
             `;
             
-            reports.slice(0, 5).forEach(report => {
+            reports.slice(0, 10).forEach(report => {
                 const reportCard = document.createElement('div');
                 reportCard.className = 'card';
                 reportCard.style.marginBottom = '1rem';
@@ -1039,7 +1094,7 @@
                         </span>
                     </div>
                     <p style="color: var(--text-secondary); margin-bottom: 1rem;">${report.description}</p>
-                    ${report.files.length > 0 ? `
+                    ${report.files && report.files.length > 0 ? `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             ${report.files.map(file => `
                                 <span style="background: var(--bg-dark); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">
@@ -1235,10 +1290,10 @@
         }
 
         // Initialize everything when page loads
-        window.addEventListener('load', function() {
+        window.addEventListener('load', async function() {
             loadTheme();
             loadUserData();
-            initializeCounters();
+            await initializeCounters();
             
             // Initialize Google Sign-In when available
             if (typeof google !== 'undefined' && google.accounts) {
@@ -1252,9 +1307,10 @@
                 }, 1000);
             }
 
-            // Firebase initialization check
+            // Firebase initialization check and load bug reports
             if (window.firebase) {
                 console.log('Firebase initialized successfully!');
+                await loadBugReports();
             }
         });
 
