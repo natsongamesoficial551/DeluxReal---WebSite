@@ -7,7 +7,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Firebase -->
+    <!-- Firebase v9 -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQggJQihYFNBqvnA81MH_rkOEptsLfow8",
+            authDomain: "deluxmodpack.firebaseapp.com",
+            projectId: "deluxmodpack",
+            storageBucket: "deluxmodpack.firebasestorage.app",
+            messagingSenderId: "60474170664",
+            appId: "1:60474170664:web:f5828e1e34b14d58a7041d",
+            measurementId: "G-TCNJXC3FW3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebase = { app, analytics, db };
+    </script>
+    <!-- Firebase Compat for fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-firestore-compat.min.js"></script>
     <style>
@@ -836,15 +862,11 @@
 
         function signOut() {
             googleUser = null;
-            localStorage.removeItem('delux_user');
             updateUI();
         }
 
         function saveUserData(user) {
-            // Save user data
-            localStorage.setItem('delux_user', JSON.stringify(user));
-            
-            // Update global user count
+            // Save user data and update global user count
             updateGlobalUserCount(user);
         }
         
@@ -861,9 +883,8 @@
         }
 
         function loadUserData() {
-            const userData = localStorage.getItem('delux_user');
-            if (userData) {
-                googleUser = JSON.parse(userData);
+            // Check if user data exists in memory from Google Sign-In
+            if (googleUser) {
                 updateUI();
             }
         }
@@ -885,7 +906,7 @@
                 document.getElementById('bug-report-form').style.display = 'block';
                 
                 // Load all bug reports for everyone to see
-            loadBugReports();
+                loadBugReports();
             } else {
                 loginSection.style.display = 'block';
                 userSection.style.display = 'none';
@@ -894,18 +915,6 @@
                 document.getElementById('bug-login-required').style.display = 'block';
                 document.getElementById('bug-report-form').style.display = 'none';
             }
-        }
-
-        function updateUserStats() {
-            const users = JSON.parse(localStorage.getItem('delux_users') || '[]');
-            const userExists = users.find(u => u.id === googleUser.id);
-            
-            if (!userExists) {
-                users.push(googleUser);
-                localStorage.setItem('delux_users', JSON.stringify(users));
-            }
-            
-            document.getElementById('users-count').textContent = users.length;
         }
 
         // Theme Management
@@ -918,10 +927,6 @@
             
             const themeIcon = document.getElementById('theme-icon');
             themeIcon.className = newTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-            
-            if (googleUser) {
-                saveUserPreferences();
-            }
         }
 
         function loadTheme() {
@@ -930,17 +935,6 @@
             
             const themeIcon = document.getElementById('theme-icon');
             themeIcon.className = savedTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
-        }
-
-        function saveUserPreferences() {
-            if (!googleUser) return;
-            
-            const preferences = {
-                theme: document.documentElement.getAttribute('data-theme'),
-                username: googleUser.name
-            };
-            
-            localStorage.setItem(`delux_prefs_${googleUser.id}`, JSON.stringify(preferences));
         }
 
         // Navigation
@@ -962,11 +956,6 @@
             const newCount = currentCount + 1;
             localStorage.setItem('delux_global_downloads', newCount.toString());
             document.getElementById('download-count').textContent = newCount;
-        }
-
-        function downloadMod() {
-            incrementDownloads();
-            alert('Download iniciado! Obrigado por baixar o Delux Modpack!');
         }
 
         // Bug Report Management
@@ -1071,38 +1060,40 @@
             const fileInput = document.getElementById('bug-files');
             const selectedFiles = document.getElementById('selected-files');
             
-            fileUpload.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                fileUpload.classList.add('dragover');
-            });
-            
-            fileUpload.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                fileUpload.classList.remove('dragover');
-            });
-            
-            fileUpload.addEventListener('drop', function(e) {
-                e.preventDefault();
-                fileUpload.classList.remove('dragover');
-                fileInput.files = e.dataTransfer.files;
-                displaySelectedFiles();
-            });
-            
-            fileInput.addEventListener('change', displaySelectedFiles);
-            
-            function displaySelectedFiles() {
-                const files = fileInput.files;
-                selectedFiles.innerHTML = '';
+            if (fileUpload && fileInput && selectedFiles) {
+                fileUpload.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    fileUpload.classList.add('dragover');
+                });
                 
-                if (files.length > 0) {
-                    const fileList = Array.from(files).map(file => 
-                        `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
-                            <span style="font-size: 0.9rem;"><i class="fas fa-file"></i> ${file.name}</span>
-                            <span style="font-size: 0.8rem; color: var(--text-secondary);">${(file.size / 1024).toFixed(1)} KB</span>
-                        </div>`
-                    ).join('');
+                fileUpload.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    fileUpload.classList.remove('dragover');
+                });
+                
+                fileUpload.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    fileUpload.classList.remove('dragover');
+                    fileInput.files = e.dataTransfer.files;
+                    displaySelectedFiles();
+                });
+                
+                fileInput.addEventListener('change', displaySelectedFiles);
+                
+                function displaySelectedFiles() {
+                    const files = fileInput.files;
+                    selectedFiles.innerHTML = '';
                     
-                    selectedFiles.innerHTML = fileList;
+                    if (files.length > 0) {
+                        const fileList = Array.from(files).map(file => 
+                            `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+                                <span style="font-size: 0.9rem;"><i class="fas fa-file"></i> ${file.name}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">${(file.size / 1024).toFixed(1)} KB</span>
+                            </div>`
+                        ).join('');
+                        
+                        selectedFiles.innerHTML = fileList;
+                    }
                 }
             }
         });
@@ -1260,6 +1251,11 @@
                     }
                 }, 1000);
             }
+
+            // Firebase initialization check
+            if (window.firebase) {
+                console.log('Firebase initialized successfully!');
+            }
         });
 
         // Close mobile menu when clicking outside
@@ -1267,7 +1263,8 @@
             const mobileMenu = document.getElementById('mobile-menu');
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
             
-            if (mobileMenu.style.display === 'block' && !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+            if (mobileMenu && mobileMenuBtn && mobileMenu.style.display === 'block' && 
+                !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
                 mobileMenu.style.display = 'none';
             }
         });
