@@ -11,7 +11,7 @@
     <!-- Firebase v9 Modular SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, Timestamp, doc, setDoc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, orderBy, query, limit, Timestamp, doc, setDoc, getDoc, updateDoc, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBQggJQihYFNBqvnA81MH_rkOEptsLfow8",
@@ -40,6 +40,7 @@
         window.firebaseGetDoc = getDoc;
         window.firebaseUpdateDoc = updateDoc;
         window.firebaseIncrement = increment;
+        window.firebaseDeleteDoc = deleteDoc;
         
         console.log("Firebase inicializado com sucesso!");
     </script>
@@ -201,6 +202,16 @@
             border-radius: 50%;
         }
 
+        .admin-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
         /* Mobile Menu */
         .mobile-menu-btn {
             display: none;
@@ -303,6 +314,19 @@
 
         .btn-secondary:hover {
             background: var(--bg-card);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
         }
 
         /* Cards */
@@ -432,6 +456,14 @@
             color: var(--text-secondary);
         }
 
+        /* Admin Controls */
+        .admin-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links {
@@ -466,6 +498,10 @@
 
             .stats {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-controls {
+                justify-content: center;
             }
         }
 
@@ -562,6 +598,7 @@
                     <div class="user-profile" onclick="toggleUserMenu()">
                         <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
                         <span id="user-name"></span>
+                        <span id="admin-badge" class="admin-badge" style="display: none;">ADMIN</span>
                     </div>
                 </div>
 
@@ -873,6 +910,7 @@
         // Google Sign-In Configuration
         let googleUser = null;
         let isFirebaseReady = false;
+        let isAdmin = false;
 
         // Aguardar Firebase estar pronto
         window.addEventListener('load', function() {
@@ -931,8 +969,11 @@
                 if (statsSnapshot.exists()) {
                     const stats = statsSnapshot.data();
                     document.getElementById('download-count').textContent = stats.downloads || 0;
-                    document.getElementById('users-count').textContent = stats.totalUsers || 0;
                     document.getElementById('bug-reports').textContent = stats.totalBugReports || 0;
+                    
+                    // Contar usuários únicos na coleção users
+                    await updateUserCount();
+                    
                     console.log('Estatísticas carregadas do Firebase:', stats);
                 } else {
                     loadLocalStats();
@@ -941,6 +982,32 @@
             } catch (error) {
                 console.error('Erro ao carregar estatísticas do Firebase:', error);
                 loadLocalStats();
+            }
+        }
+
+        // Nova função para contar usuários únicos
+        async function updateUserCount() {
+            if (!isFirebaseReady || !window.firebaseDb) return;
+            
+            try {
+                const usersCollection = window.firebaseCollection(window.firebaseDb, 'users');
+                const usersSnapshot = await window.firebaseGetDocs(usersCollection);
+                const totalUsers = usersSnapshot.size;
+                
+                // Atualizar no documento de estatísticas
+                const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                await window.firebaseUpdateDoc(statsDoc, {
+                    totalUsers: totalUsers,
+                    lastUpdated: window.firebaseTimestamp.now()
+                });
+                
+                // Atualizar na interface
+                document.getElementById('users-count').textContent = totalUsers;
+                
+                console.log(`Total de usuários únicos: ${totalUsers}`);
+                
+            } catch (error) {
+                console.error('Erro ao contar usuários:', error);
             }
         }
 
@@ -1014,6 +1081,9 @@
                 picture: responsePayload.picture
             };
 
+            // Verificar se é admin
+            isAdmin = googleUser.email === 'borgesnatan09@gmail.com';
+            
             saveUserData(googleUser);
             updateUI();
         }
@@ -1037,6 +1107,8 @@
 
         function signOut() {
             googleUser = null;
+            isAdmin = false;
+            localStorage.removeItem('delux_current_user');
             updateUI();
         }
 
@@ -1053,24 +1125,18 @@
                         name: user.name,
                         email: user.email,
                         picture: user.picture,
+                        isAdmin: user.email === 'borgesnatan09@gmail.com',
                         lastLogin: window.firebaseTimestamp.now()
                     };
                     
                     if (!userSnapshot.exists()) {
-                        // Usuário novo - criar documento e incrementar contador
+                        // Usuário novo - criar documento
                         await window.firebaseSetDoc(userDoc, {
                             ...userData,
                             createdAt: window.firebaseTimestamp.now()
                         });
                         
-                        // Incrementar contador global de usuários
-                        const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
-                        await window.firebaseUpdateDoc(statsDoc, {
-                            totalUsers: window.firebaseIncrement(1),
-                            lastUpdated: window.firebaseTimestamp.now()
-                        });
-                        
-                        console.log('Novo usuário salvo e contador incrementado!');
+                        console.log('Novo usuário salvo!');
                     } else {
                         // Usuário existente - apenas atualizar last login
                         await window.firebaseUpdateDoc(userDoc, {
@@ -1080,8 +1146,8 @@
                         console.log('Login do usuário existente atualizado!');
                     }
                     
-                    // Recarregar estatísticas
-                    await loadGlobalStats();
+                    // Recarregar estatísticas para atualizar contagem de usuários
+                    await updateUserCount();
                 }
             } catch (error) {
                 console.error('Erro ao salvar no Firebase:', error);
@@ -1095,6 +1161,7 @@
             const savedUser = localStorage.getItem('delux_current_user');
             if (savedUser) {
                 googleUser = JSON.parse(savedUser);
+                isAdmin = googleUser.email === 'borgesnatan09@gmail.com';
                 updateUI();
             }
         }
@@ -1104,12 +1171,20 @@
             const userSection = document.getElementById('user-section');
             const userAvatar = document.getElementById('user-avatar');
             const userName = document.getElementById('user-name');
+            const adminBadge = document.getElementById('admin-badge');
 
             if (googleUser) {
                 loginSection.style.display = 'none';
                 userSection.style.display = 'block';
                 userAvatar.src = googleUser.picture;
                 userName.textContent = googleUser.name.split(' ')[0];
+                
+                // Mostrar badge de admin
+                if (isAdmin) {
+                    adminBadge.style.display = 'inline-block';
+                } else {
+                    adminBadge.style.display = 'none';
+                }
                 
                 document.getElementById('bug-login-required').style.display = 'none';
                 document.getElementById('bug-report-form').style.display = 'block';
@@ -1118,6 +1193,7 @@
             } else {
                 loginSection.style.display = 'block';
                 userSection.style.display = 'none';
+                adminBadge.style.display = 'none';
                 
                 document.getElementById('bug-login-required').style.display = 'block';
                 document.getElementById('bug-report-form').style.display = 'none';
@@ -1258,6 +1334,43 @@
             }
         }
 
+        // Função para deletar bug report (apenas admin)
+        async function deleteBugReport(reportId) {
+            if (!isAdmin || !isFirebaseReady || !window.firebaseDb) {
+                showMessage('Você não tem permissão para isso!', 'error');
+                return;
+            }
+
+            if (!confirm('Tem certeza que deseja deletar este bug report?')) {
+                return;
+            }
+
+            try {
+                // Deletar do Firebase
+                const reportDoc = window.firebaseDoc(window.firebaseDb, 'bugReports', reportId);
+                await window.firebaseDeleteDoc(reportDoc);
+
+                // Decrementar contador global
+                const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
+                await window.firebaseUpdateDoc(statsDoc, {
+                    totalBugReports: window.firebaseIncrement(-1),
+                    lastUpdated: window.firebaseTimestamp.now()
+                });
+
+                console.log('Bug report deletado com sucesso!');
+                
+                // Recarregar dados
+                await loadGlobalStats();
+                await loadBugReports();
+                
+                showMessage('Bug report deletado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao deletar bug report:', error);
+                showMessage('Erro ao deletar bug report!', 'error');
+            }
+        }
+
         async function loadBugReports() {
             const container = document.getElementById('bug-reports-list');
             let reports = [];
@@ -1341,7 +1454,7 @@
                             </div>
                             
                             ${report.files && report.files.length > 0 ? `
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
                                     <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;">
                                         <i class="fas fa-paperclip"></i> Arquivos anexados:
                                     </span>
@@ -1355,6 +1468,14 @@
                                             </span>
                                         `;
                                     }).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${isAdmin ? `
+                                <div class="admin-controls">
+                                    <button onclick="deleteBugReport('${report.id}')" class="btn btn-danger btn-small">
+                                        <i class="fas fa-trash"></i> Deletar
+                                    </button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1504,6 +1625,7 @@
                     <div>
                         <div style="font-weight: 500;">${googleUser.name}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">${googleUser.email}</div>
+                        ${isAdmin ? '<div style="font-size: 0.7rem; color: #ffd700; font-weight: 600;">👑 ADMINISTRADOR</div>' : ''}
                     </div>
                 </div>
                 <button onclick="signOut(); this.parentElement.remove();" style="background: var(--danger); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; width: 100%;">
