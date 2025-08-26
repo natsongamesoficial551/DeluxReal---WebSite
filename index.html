@@ -448,6 +448,7 @@
             color: white;
             padding: 1rem;
             text-align: center;
+            position: relative;
         }
 
         .chat-header h3 {
@@ -458,6 +459,24 @@
         .chat-header p {
             font-size: 0.9rem;
             opacity: 0.9;
+        }
+
+        .api-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .api-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .chat-messages {
@@ -1037,6 +1056,9 @@
                 
                 <div class="chat-container">
                     <div class="chat-header">
+                        <button class="api-toggle" onclick="toggleApiMode()" id="api-toggle">
+                            API: Local
+                        </button>
                         <h3><i class="fas fa-robot"></i> DeluxAI</h3>
                         <p>Especialista em Delux Modpack - Criado por Natan</p>
                     </div>
@@ -1072,8 +1094,22 @@
     </main>
 
     <script>
-        // Chat API Configuration
-        const CHAT_API_URL = 'https://deluxgtav.netlify.app';
+        // ============ CONFIGURAÇÕES DA API DO CHAT ============
+        
+        // Configuração da API - Pode alternar entre local e externa
+        const CHAT_API_CONFIG = {
+            local: {
+                url: 'http://localhost:5001',
+                name: 'API Local'
+            },
+            external: {
+                url: 'https://deluxgtav.netlify.app',
+                name: 'API Externa'
+            }
+        };
+
+        // Estado atual da API
+        let currentApiMode = 'local'; // 'local' ou 'external'
         
         // Google Sign-In Configuration
         let googleUser = null;
@@ -1093,7 +1129,33 @@
             }, 1000);
         });
 
-        // ============ CHAT AI FUNCTIONS ============
+        // ============ FUNÇÕES DA API DO CHAT INTEGRADA ============
+
+        // Função para alternar modo da API
+        function toggleApiMode() {
+            currentApiMode = currentApiMode === 'local' ? 'external' : 'local';
+            const toggle = document.getElementById('api-toggle');
+            toggle.textContent = `API: ${CHAT_API_CONFIG[currentApiMode].name}`;
+            
+            // Limpar mensagens e verificar status
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = `
+                <div class="chat-message bot">
+                    Fala aí! 🎮 Sou o DeluxAI, criado pelo Natan!<br><br>
+                    <strong>Agora usando: ${CHAT_API_CONFIG[currentApiMode].name}</strong><br><br>
+                    <strong>Especialista no Delux Real BETA V1:</strong><br>
+                    • Instalação das 3 partes<br>
+                    • Configurações otimizadas<br>
+                    • Solução de crashes<br>
+                    • Requisitos do sistema<br>
+                    • Downloads oficiais<br><br>
+                    <strong>Pergunte qualquer coisa!</strong> Tmj! 🤝
+                </div>
+            `;
+            
+            // Verificar status da nova API
+            checkChatStatus();
+        }
 
         // Enter para enviar mensagem no chat
         document.addEventListener('DOMContentLoaded', function() {
@@ -1126,11 +1188,13 @@
 
             try {
                 const startTime = Date.now();
+                const apiUrl = CHAT_API_CONFIG[currentApiMode].url;
                 
-                const response = await fetch(`${CHAT_API_URL}/chat`, {
+                const response = await fetch(`${apiUrl}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ message: message }),
+                    timeout: 30000
                 });
 
                 const endTime = Date.now();
@@ -1142,26 +1206,36 @@
                     const data = await response.json();
                     addChatMessage(data.response, 'bot');
                     
-                    // Atualiza status - corrigido para usar campos corretos
+                    // Atualiza status
                     const metadata = data.metadata || {};
                     const fonte = metadata.fonte || 'unknown';
-                    const modelo = metadata.modelo || 'gemma3:1b';
+                    const modelo = metadata.modelo || currentApiMode === 'local' ? 'gemma3:1b' : 'external';
+                    const apiName = CHAT_API_CONFIG[currentApiMode].name;
                     
-                    chatStatus.innerHTML = `🟢 ${responseTime}s - ${fonte} - ${modelo}`;
+                    chatStatus.innerHTML = `🟢 ${responseTime}s - ${apiName} - ${fonte} - ${modelo}`;
                     chatStatus.className = 'chat-status success';
                 } else {
-                    const errorData = await response.json();
-                    addChatMessage(`❌ ${errorData.error || 'Erro na resposta'}`, 'bot');
-                    chatStatus.innerHTML = '🔴 Erro na API';
+                    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+                    addChatMessage(`❌ ${errorData.error || 'Erro na resposta da API'}`, 'bot');
+                    chatStatus.innerHTML = `🔴 Erro ${response.status} - ${CHAT_API_CONFIG[currentApiMode].name}`;
                     chatStatus.className = 'chat-status error';
                 }
 
             } catch (error) {
                 hideChatTyping();
-                addChatMessage('❌ Erro de conexão! Verifique se a DeluxAI está rodando.', 'bot');
-                chatStatus.innerHTML = '🔴 Conexão perdida';
+                console.error('Erro no chat:', error);
+                
+                // Mensagem de erro específica baseada na API
+                let errorMessage = '❌ Erro de conexão!';
+                if (currentApiMode === 'local') {
+                    errorMessage += ' Verifique se a DeluxAI está rodando em localhost:5001';
+                } else {
+                    errorMessage += ' Problema com a API externa.';
+                }
+                
+                addChatMessage(errorMessage, 'bot');
+                chatStatus.innerHTML = `🔴 Conexão perdida - ${CHAT_API_CONFIG[currentApiMode].name}`;
                 chatStatus.className = 'chat-status error';
-                console.error('Erro:', error);
             }
 
             chatSendBtn.disabled = false;
@@ -1205,23 +1279,42 @@
         // Verificar status da API ao carregar
         async function checkChatStatus() {
             const chatStatus = document.getElementById('chat-status');
+            const apiUrl = CHAT_API_CONFIG[currentApiMode].url;
+            const apiName = CHAT_API_CONFIG[currentApiMode].name;
+            
             try {
-                const response = await fetch(`${CHAT_API_URL}/health`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(`${apiUrl}/health`, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
                 if (response.ok) {
                     const data = await response.json();
-                    const ollamaStatus = data.ollama ? '✅' : '❌';
-                    chatStatus.innerHTML = `🟢 Conectado - ${data.modelo} - Ollama: ${ollamaStatus}`;
+                    const ollamaStatus = currentApiMode === 'local' && data.ollama ? '✅ Ollama' : '';
+                    const modelo = data.modelo || 'N/A';
+                    
+                    chatStatus.innerHTML = `🟢 ${apiName} Online - ${modelo} ${ollamaStatus}`;
                     chatStatus.className = 'chat-status success';
                 } else {
-                    chatStatus.innerHTML = '🔴 API offline';
+                    chatStatus.innerHTML = `🔴 ${apiName} - Status ${response.status}`;
                     chatStatus.className = 'chat-status error';
                 }
-            } catch {
-                chatStatus.innerHTML = '🔴 Verificando conexão...';
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    chatStatus.innerHTML = `🔴 ${apiName} - Timeout (>5s)`;
+                } else {
+                    chatStatus.innerHTML = `🔴 ${apiName} - Offline`;
+                }
                 chatStatus.className = 'chat-status error';
                 
-                // Tenta novamente em 3 segundos
-                setTimeout(checkChatStatus, 3000);
+                // Tenta novamente em 10 segundos se for API local
+                if (currentApiMode === 'local') {
+                    setTimeout(checkChatStatus, 10000);
+                }
             }
         }
 
@@ -1955,6 +2048,8 @@
 
         // Initialize everything when page loads
         window.addEventListener('load', async function() {
+            console.log('=== Delux Modpack - Sistema Integrado ===');
+            console.log('DeluxAI API: Local (http://localhost:5001) + Externa (https://deluxgtav.netlify.app)');
             console.log('Página carregada, inicializando...');
             
             loadTheme();
@@ -1963,7 +2058,7 @@
             // Initialize Google Sign-In
             setTimeout(initializeGoogleSignIn, 500);
             
-            // Initialize Chat Status
+            // Initialize Chat Status - começa verificando API local
             setTimeout(checkChatStatus, 1000);
             
             // Aguardar Firebase ficar pronto e então carregar dados
@@ -1995,6 +2090,13 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
+
+        console.log('=== DeluxAI Sistema Integrado Carregado ===');
+        console.log('✅ API Local: http://localhost:5001');
+        console.log('✅ API Externa: https://deluxgtav.netlify.app');
+        console.log('✅ Firebase: Configurado');
+        console.log('✅ Google Auth: Configurado');
+        console.log('============================================');
     </script>
 </body>
 </html>
