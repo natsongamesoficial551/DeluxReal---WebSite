@@ -430,41 +430,50 @@
             margin-top: 0.5rem;
         }
 
-        /* Chat Styles */
+        /* Chat Styles - CORRIGIDO */
         .chat-container {
-            background: var(--bg-card);
+            background: rgba(255,255,255,0.95);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 20px;
             height: 600px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="light"] .chat-container {
+            background: rgba(255,255,255,0.95);
+        }
+
+        [data-theme="dark"] .chat-container {
+            background: var(--bg-card);
         }
 
         .chat-header {
-            background: linear-gradient(45deg, var(--primary), var(--accent));
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
             color: white;
-            padding: 1rem;
+            padding: 15px;
             text-align: center;
             position: relative;
         }
 
         .chat-header h3 {
             margin-bottom: 0.5rem;
-            font-size: 1.2rem;
+            font-size: 18px;
         }
 
         .chat-header p {
-            font-size: 0.9rem;
+            font-size: 12px;
             opacity: 0.9;
         }
 
         .api-toggle {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: 15px;
+            right: 15px;
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
@@ -481,49 +490,47 @@
 
         .chat-messages {
             flex: 1;
-            padding: 1rem;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 10px;
         }
 
         .chat-message {
             max-width: 85%;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 13px;
             line-height: 1.4;
             animation: slideIn 0.3s ease;
         }
 
         .chat-message.user {
-            background: var(--primary);
+            background: #007bff;
             color: white;
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 5px;
         }
 
         .chat-message.bot {
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            background: #f1f3f4;
+            color: #333;
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid var(--border);
+            border-bottom-left-radius: 5px;
         }
 
         .chat-typing {
             display: none;
-            padding: 0.75rem 1rem;
-            background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            padding: 8px 12px;
+            background: #f1f3f4;
+            border-radius: 15px;
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 5px;
         }
 
         .chat-typing span {
-            background: var(--primary);
+            background: #007bff;
             width: 8px;
             height: 8px;
             border-radius: 50%;
@@ -536,54 +543,54 @@
         .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
 
         .chat-input-area {
-            padding: 1rem;
+            padding: 15px;
             border-top: 1px solid var(--border);
             display: flex;
-            gap: 0.75rem;
+            gap: 10px;
         }
 
         .chat-input {
             flex: 1;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
+            padding: 10px;
+            border: 2px solid #ddd;
             border-radius: 20px;
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            background: white;
+            color: #333;
             outline: none;
-            font-size: 0.9rem;
+            font-size: 14px;
         }
 
         .chat-input:focus {
-            border-color: var(--primary);
+            border-color: #007bff;
         }
 
         .chat-send-btn {
-            padding: 0.75rem 1rem;
-            background: var(--primary);
+            padding: 10px 15px;
+            background: #007bff;
             color: white;
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 14px;
             transition: all 0.3s;
         }
 
         .chat-send-btn:hover {
-            background: var(--primary-dark);
+            background: #0056b3;
             transform: scale(1.05);
         }
 
         .chat-send-btn:disabled {
-            background: var(--text-secondary);
+            background: #ccc;
             cursor: not-allowed;
             transform: none;
         }
 
         .chat-status {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+            font-size: 11px;
+            color: #666;
             text-align: center;
-            padding: 0.5rem;
+            padding: 5px;
             border-top: 1px solid var(--border);
         }
 
@@ -697,6 +704,7 @@
 
             .chat-container {
                 height: 500px;
+                max-width: 95%;
             }
         }
 
@@ -716,12 +724,12 @@
         }
 
         .chat-messages::-webkit-scrollbar-track {
-            background: var(--bg-card);
+            background: #f1f1f1;
             border-radius: 10px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--primary);
+            background: #007bff;
             border-radius: 10px;
         }
     </style>
@@ -1049,18 +1057,15 @@
             </div>
         </section>
 
-        <!-- Chat Section -->
+        <!-- Chat Section - CORRIGIDO PARA FUNCIONAR COMO O CHAT SIMPLES -->
         <section id="chat" class="section">
             <div class="container">
                 <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">Chat com IA</h2>
                 
                 <div class="chat-container">
                     <div class="chat-header">
-                        <button class="api-toggle" onclick="toggleApiMode()" id="api-toggle">
-                            API: Local
-                        </button>
                         <h3><i class="fas fa-robot"></i> DeluxAI</h3>
-                        <p>Especialista em Delux Modpack - Criado por Natan</p>
+                        <p>Criado por Natan - Especialista Delux Real BETA V1</p>
                     </div>
                     
                     <div class="chat-messages" id="chat-messages">
@@ -1094,22 +1099,9 @@
     </main>
 
     <script>
-        // ============ CONFIGURAÇÕES DA API DO CHAT ============
+        // ============ CONFIGURAÇÃO DA API DO CHAT - SIMPLIFICADA ============
         
-        // Configuração da API - Pode alternar entre local e externa
-        const CHAT_API_CONFIG = {
-            local: {
-                url: 'http://localhost:5001',
-                name: 'API Local'
-            },
-            external: {
-                url: 'https://deluxgtav.netlify.app',
-                name: 'API Externa'
-            }
-        };
-
-        // Estado atual da API
-        let currentApiMode = 'local'; // 'local' ou 'external'
+        const API_URL = 'https://deluxai.onrender.com'; // API única e fixa
         
         // Google Sign-In Configuration
         let googleUser = null;
@@ -1129,33 +1121,7 @@
             }, 1000);
         });
 
-        // ============ FUNÇÕES DA API DO CHAT INTEGRADA ============
-
-        // Função para alternar modo da API
-        function toggleApiMode() {
-            currentApiMode = currentApiMode === 'local' ? 'external' : 'local';
-            const toggle = document.getElementById('api-toggle');
-            toggle.textContent = `API: ${CHAT_API_CONFIG[currentApiMode].name}`;
-            
-            // Limpar mensagens e verificar status
-            const chatMessages = document.getElementById('chat-messages');
-            chatMessages.innerHTML = `
-                <div class="chat-message bot">
-                    Fala aí! 🎮 Sou o DeluxAI, criado pelo Natan!<br><br>
-                    <strong>Agora usando: ${CHAT_API_CONFIG[currentApiMode].name}</strong><br><br>
-                    <strong>Especialista no Delux Real BETA V1:</strong><br>
-                    • Instalação das 3 partes<br>
-                    • Configurações otimizadas<br>
-                    • Solução de crashes<br>
-                    • Requisitos do sistema<br>
-                    • Downloads oficiais<br><br>
-                    <strong>Pergunte qualquer coisa!</strong> Tmj! 🤝
-                </div>
-            `;
-            
-            // Verificar status da nova API
-            checkChatStatus();
-        }
+        // ============ FUNÇÕES DO CHAT - BASEADAS NO CHAT SIMPLES QUE FUNCIONAVA ============
 
         // Enter para enviar mensagem no chat
         document.addEventListener('DOMContentLoaded', function() {
@@ -1188,9 +1154,8 @@
 
             try {
                 const startTime = Date.now();
-                const apiUrl = CHAT_API_CONFIG[currentApiMode].url;
                 
-                const response = await fetch(`${apiUrl}/chat`, {
+                const response = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message }),
@@ -1206,18 +1171,17 @@
                     const data = await response.json();
                     addChatMessage(data.response, 'bot');
                     
-                    // Atualiza status
+                    // Atualiza status - usando mesma lógica do chat simples
                     const metadata = data.metadata || {};
                     const fonte = metadata.fonte || 'unknown';
-                    const modelo = metadata.modelo || currentApiMode === 'local' ? 'gemma3:1b' : 'external';
-                    const apiName = CHAT_API_CONFIG[currentApiMode].name;
+                    const modelo = metadata.modelo || 'gemma3:1b';
                     
-                    chatStatus.innerHTML = `🟢 ${responseTime}s - ${apiName} - ${fonte} - ${modelo}`;
+                    chatStatus.innerHTML = `🟢 ${responseTime}s - ${fonte} - ${modelo}`;
                     chatStatus.className = 'chat-status success';
                 } else {
                     const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
                     addChatMessage(`❌ ${errorData.error || 'Erro na resposta da API'}`, 'bot');
-                    chatStatus.innerHTML = `🔴 Erro ${response.status} - ${CHAT_API_CONFIG[currentApiMode].name}`;
+                    chatStatus.innerHTML = '🔴 Erro na API';
                     chatStatus.className = 'chat-status error';
                 }
 
@@ -1225,16 +1189,8 @@
                 hideChatTyping();
                 console.error('Erro no chat:', error);
                 
-                // Mensagem de erro específica baseada na API
-                let errorMessage = '❌ Erro de conexão!';
-                if (currentApiMode === 'local') {
-                    errorMessage += ' Verifique se a DeluxAI está rodando em localhost:5001';
-                } else {
-                    errorMessage += ' Problema com a API externa.';
-                }
-                
-                addChatMessage(errorMessage, 'bot');
-                chatStatus.innerHTML = `🔴 Conexão perdida - ${CHAT_API_CONFIG[currentApiMode].name}`;
+                addChatMessage('❌ Erro de conexão! Verifique se a DeluxAI está rodando na porta 5001.', 'bot');
+                chatStatus.innerHTML = '🔴 Conexão perdida';
                 chatStatus.className = 'chat-status error';
             }
 
@@ -1276,17 +1232,15 @@
             chatTyping.style.display = 'none';
         }
 
-        // Verificar status da API ao carregar
+        // Verificar status da API ao carregar - igual ao chat simples
         async function checkChatStatus() {
             const chatStatus = document.getElementById('chat-status');
-            const apiUrl = CHAT_API_CONFIG[currentApiMode].url;
-            const apiName = CHAT_API_CONFIG[currentApiMode].name;
             
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
-                const response = await fetch(`${apiUrl}/health`, {
+                const response = await fetch(`${API_URL}/health`, {
                     signal: controller.signal
                 });
                 
@@ -1294,27 +1248,25 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    const ollamaStatus = currentApiMode === 'local' && data.ollama ? '✅ Ollama' : '';
-                    const modelo = data.modelo || 'N/A';
+                    const ollamaStatus = data.ollama ? '✅' : '❌';
+                    const modelo = data.modelo || 'gemma3:1b';
                     
-                    chatStatus.innerHTML = `🟢 ${apiName} Online - ${modelo} ${ollamaStatus}`;
+                    chatStatus.innerHTML = `🟢 Conectado - ${modelo} - Ollama: ${ollamaStatus}`;
                     chatStatus.className = 'chat-status success';
                 } else {
-                    chatStatus.innerHTML = `🔴 ${apiName} - Status ${response.status}`;
+                    chatStatus.innerHTML = `🔴 API - Status ${response.status}`;
                     chatStatus.className = 'chat-status error';
                 }
             } catch (error) {
                 if (error.name === 'AbortError') {
-                    chatStatus.innerHTML = `🔴 ${apiName} - Timeout (>5s)`;
+                    chatStatus.innerHTML = '🔴 API - Timeout (>5s)';
                 } else {
-                    chatStatus.innerHTML = `🔴 ${apiName} - Offline`;
+                    chatStatus.innerHTML = '🔴 Verificando conexão...';
                 }
                 chatStatus.className = 'chat-status error';
                 
-                // Tenta novamente em 10 segundos se for API local
-                if (currentApiMode === 'local') {
-                    setTimeout(checkChatStatus, 10000);
-                }
+                // Tenta novamente em 10 segundos
+                setTimeout(checkChatStatus, 10000);
             }
         }
 
@@ -1647,456 +1599,3 @@
 
         async function submitBugReport(event) {
             event.preventDefault();
-            
-            if (!googleUser) {
-                showMessage('Você precisa estar logado para reportar bugs!', 'error');
-                return;
-            }
-            
-            const submitBtn = document.getElementById('submit-btn');
-            const originalText = submitBtn.innerHTML;
-            
-            // Desabilitar botão e mostrar loading
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="loading"></div> Enviando...';
-            
-            try {
-                const title = document.getElementById('bug-title').value.trim();
-                const category = document.getElementById('bug-category').value;
-                const description = document.getElementById('bug-description').value.trim();
-                const files = document.getElementById('bug-files').files;
-                
-                if (!title || !description) {
-                    throw new Error('Título e descrição são obrigatórios!');
-                }
-                
-                const bugReport = {
-                    userId: googleUser.id,
-                    userName: googleUser.name,
-                    userEmail: googleUser.email,
-                    userAvatar: googleUser.picture,
-                    title,
-                    category,
-                    description,
-                    files: Array.from(files).map(f => ({
-                        name: f.name,
-                        size: f.size,
-                        type: f.type
-                    })),
-                    status: 'Aberto',
-                    createdAt: window.firebaseTimestamp.now()
-                };
-                
-                // Salvar no Firebase
-                if (isFirebaseReady && window.firebaseDb) {
-                    await window.firebaseAddDoc(
-                        window.firebaseCollection(window.firebaseDb, 'bugReports'), 
-                        bugReport
-                    );
-                    
-                    // Incrementar contador global de bug reports
-                    const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
-                    await window.firebaseUpdateDoc(statsDoc, {
-                        totalBugReports: window.firebaseIncrement(1),
-                        lastUpdated: window.firebaseTimestamp.now()
-                    });
-                    
-                    console.log('Bug report salvo no Firebase e contador incrementado!');
-                    
-                    // Recarregar estatísticas e bug reports
-                    await loadGlobalStats();
-                    await loadBugReports();
-                    
-                    showMessage('Bug reportado com sucesso! Obrigado pelo feedback.', 'success');
-                } else {
-                    throw new Error('Firebase não disponível');
-                }
-                
-                // Limpar formulário
-                document.getElementById('bug-form').reset();
-                document.getElementById('selected-files').innerHTML = '';
-                
-            } catch (error) {
-                console.error('Erro ao enviar bug report:', error);
-                showMessage(`Erro ao enviar report: ${error.message}`, 'error');
-                
-            } finally {
-                // Reabilitar botão
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        }
-
-        // Função para deletar bug report (apenas admin)
-        async function deleteBugReport(reportId) {
-            if (!isAdmin || !isFirebaseReady || !window.firebaseDb) {
-                showMessage('Você não tem permissão para isso!', 'error');
-                return;
-            }
-
-            if (!confirm('Tem certeza que deseja deletar este bug report?')) {
-                return;
-            }
-
-            try {
-                // Deletar do Firebase
-                const reportDoc = window.firebaseDoc(window.firebaseDb, 'bugReports', reportId);
-                await window.firebaseDeleteDoc(reportDoc);
-
-                // Decrementar contador global
-                const statsDoc = window.firebaseDoc(window.firebaseDb, 'globalStats', 'main');
-                await window.firebaseUpdateDoc(statsDoc, {
-                    totalBugReports: window.firebaseIncrement(-1),
-                    lastUpdated: window.firebaseTimestamp.now()
-                });
-
-                console.log('Bug report deletado com sucesso!');
-                
-                // Recarregar dados
-                await loadGlobalStats();
-                await loadBugReports();
-                
-                showMessage('Bug report deletado com sucesso!', 'success');
-                
-            } catch (error) {
-                console.error('Erro ao deletar bug report:', error);
-                showMessage('Erro ao deletar bug report!', 'error');
-            }
-        }
-
-        async function loadBugReports() {
-            const container = document.getElementById('bug-reports-list');
-            let reports = [];
-            
-            try {
-                // Carregar do Firebase
-                if (isFirebaseReady && window.firebaseDb) {
-                    const q = window.firebaseQuery(
-                        window.firebaseCollection(window.firebaseDb, 'bugReports'),
-                        window.firebaseOrderBy('createdAt', 'desc'),
-                        window.firebaseLimit(20)
-                    );
-                    
-                    const querySnapshot = await window.firebaseGetDocs(q);
-                    
-                    reports = querySnapshot.docs.map(doc => {
-                        const data = doc.data();
-                        return {
-                            id: doc.id,
-                            ...data,
-                            timestamp: data.createdAt?.toDate?.() ? 
-                                data.createdAt.toDate().toLocaleString('pt-BR') : 
-                                'Data inválida'
-                        };
-                    });
-                    
-                    console.log(`Carregados ${reports.length} bug reports do Firebase`);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar do Firebase:', error);
-                
-                // Fallback para localStorage
-                const localReports = JSON.parse(localStorage.getItem('delux_global_bug_reports') || '[]');
-                reports = localReports.slice(0, 20);
-                console.log(`Carregados ${reports.length} bug reports do localStorage (fallback)`);
-            }
-            
-            if (reports.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                        <i class="fas fa-bug" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                        <h3>Nenhum bug reportado ainda</h3>
-                        <p>Seja o primeiro a ajudar reportando problemas!</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <h3 style="color: var(--primary); margin-bottom: 2rem; text-align: center;">
-                    <i class="fas fa-list"></i> Reports Recentes (${reports.length} exibindo)
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    ${reports.map(report => `
-                        <div class="card" style="margin: 0;">
-                            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
-                                <img src="${report.userAvatar || '/api/placeholder/40/40'}" 
-                                     alt="Avatar" 
-                                     style="width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;">
-                                <div style="flex-grow: 1;">
-                                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 1.1rem;">${report.title}</h4>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
-                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                                            <i class="fas fa-user"></i> ${report.userName}
-                                        </span>
-                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                                            <i class="fas fa-clock"></i> ${report.timestamp}
-                                        </span>
-                                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                                            <i class="fas fa-tag"></i> ${report.category}
-                                        </span>
-                                    </div>
-                                </div>
-                                <span style="background: var(--warning); color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">
-                                    ${report.status}
-                                </span>
-                            </div>
-                            
-                            <div style="background: var(--bg-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                                <p style="color: var(--text-primary); margin: 0; line-height: 1.5;">${report.description}</p>
-                            </div>
-                            
-                            ${report.files && report.files.length > 0 ? `
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                                    <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;">
-                                        <i class="fas fa-paperclip"></i> Arquivos anexados:
-                                    </span>
-                                    ${report.files.map(file => {
-                                        const fileName = typeof file === 'string' ? file : file.name;
-                                        const fileSize = typeof file === 'object' && file.size ? 
-                                            ` (${(file.size / 1024).toFixed(1)}KB)` : '';
-                                        return `
-                                            <span style="background: var(--bg-card); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">
-                                                <i class="fas fa-file"></i> ${fileName}${fileSize}
-                                            </span>
-                                        `;
-                                    }).join('')}
-                                </div>
-                            ` : ''}
-                            
-                            ${isAdmin ? `
-                                <div class="admin-controls">
-                                    <button onclick="deleteBugReport('${report.id}')" class="btn btn-danger btn-small">
-                                        <i class="fas fa-trash"></i> Deletar
-                                    </button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        // File Upload Handler
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileUpload = document.querySelector('.file-upload');
-            const fileInput = document.getElementById('bug-files');
-            const selectedFiles = document.getElementById('selected-files');
-            
-            if (fileUpload && fileInput && selectedFiles) {
-                fileUpload.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    fileUpload.classList.add('dragover');
-                });
-                
-                fileUpload.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    fileUpload.classList.remove('dragover');
-                });
-                
-                fileUpload.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    fileUpload.classList.remove('dragover');
-                    fileInput.files = e.dataTransfer.files;
-                    displaySelectedFiles();
-                });
-                
-                fileInput.addEventListener('change', displaySelectedFiles);
-                
-                function displaySelectedFiles() {
-                    const files = fileInput.files;
-                    selectedFiles.innerHTML = '';
-                    
-                    if (files.length > 0) {
-                        const fileList = Array.from(files).map(file => 
-                            `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem; border: 1px solid var(--border);">
-                                <span style="font-size: 0.9rem; color: var(--text-primary);"><i class="fas fa-file"></i> ${file.name}</span>
-                                <span style="font-size: 0.8rem; color: var(--text-secondary);">${(file.size / 1024).toFixed(1)} KB</span>
-                            </div>`
-                        ).join('');
-                        
-                        selectedFiles.innerHTML = fileList;
-                    }
-                }
-            }
-        });
-
-        // PIX Donation
-        function showPixInfo() {
-            const pixKey = "borgesnatan09@gmail.com";
-            const pixCopia = "00020126580014BR.GOV.BCB.PIX013638156ed4-8fec-4f50-b638-324a67ae6dc2520400005303986540510.005802BR5925Natan Borges Alves Nascim6009SAO PAULO62140510dgY6Av3nTB63045562";
-            
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                padding: 20px;
-            `;
-            
-            modal.innerHTML = `
-                <div style="background: var(--bg-card); border-radius: 12px; padding: 2rem; max-width: 450px; width: 100%; text-align: center; border: 1px solid var(--border);">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem;">
-                        <i class="fas fa-heart" style="color: var(--danger);"></i> Apoie o Projeto
-                    </h3>
-                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
-                        Sua doação ajuda no desenvolvimento contínuo do modpack!
-                    </p>
-                    
-                    <div style="background: var(--bg-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Chave PIX (Email):</p>
-                        <p style="color: var(--primary); font-family: monospace; font-size: 1rem; word-break: break-all;">${pixKey}</p>
-                    </div>
-
-                    <div style="background: var(--bg-dark); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                        <p style="font-weight: 600; margin-bottom: 0.5rem;">PIX Copia e Cola:</p>
-                        <p style="color: var(--accent); font-family: monospace; font-size: 0.8rem; word-break: break-all; max-height: 80px; overflow-y: auto; border: 1px solid var(--border); padding: 0.5rem; border-radius: 4px;">${pixCopia}</p>
-                    </div>
-                    
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <button onclick="copyPixKey('${pixKey}')" class="btn" style="flex: 1; min-width: 120px;">
-                            <i class="fas fa-copy"></i> Copiar Email
-                        </button>
-                        <button onclick="copyPixKey('${pixCopia}')" class="btn" style="flex: 1; min-width: 120px; background: var(--accent);">
-                            <i class="fas fa-copy"></i> Copiar PIX
-                        </button>
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">
-                            <i class="fas fa-times"></i> Fechar
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.remove();
-                }
-            });
-        }
-        
-        function copyPixKey(key) {
-            navigator.clipboard.writeText(key).then(() => {
-                alert('Chave PIX copiada! Cole no seu app de pagamentos.');
-            }).catch(() => {
-                const textArea = document.createElement('textarea');
-                textArea.value = key;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('Chave PIX copiada! Cole no seu app de pagamentos.');
-            });
-        }
-
-        // User Menu Toggle
-        function toggleUserMenu() {
-            const dropdown = document.createElement('div');
-            dropdown.style.cssText = `
-                position: absolute;
-                top: 60px;
-                right: 20px;
-                background: var(--bg-card);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 1rem;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                z-index: 1000;
-            `;
-            
-            dropdown.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                    <img src="${googleUser.picture}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%;">
-                    <div>
-                        <div style="font-weight: 500;">${googleUser.name}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">${googleUser.email}</div>
-                        ${isAdmin ? '<div style="font-size: 0.7rem; color: #ffd700; font-weight: 600;">👑 ADMINISTRADOR</div>' : ''}
-                    </div>
-                </div>
-                <button onclick="signOut(); this.parentElement.remove();" style="background: var(--danger); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; width: 100%;">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            `;
-            
-            const existingDropdown = document.querySelector('[data-dropdown="user"]');
-            if (existingDropdown) {
-                existingDropdown.remove();
-            }
-            
-            dropdown.setAttribute('data-dropdown', 'user');
-            document.body.appendChild(dropdown);
-            
-            setTimeout(() => {
-                document.addEventListener('click', function closeDropdown(e) {
-                    if (!dropdown.contains(e.target)) {
-                        dropdown.remove();
-                        document.removeEventListener('click', closeDropdown);
-                    }
-                });
-            }, 100);
-        }
-
-        // ============ INICIALIZAÇÃO ============
-
-        // Initialize everything when page loads
-        window.addEventListener('load', async function() {
-            console.log('=== Delux Modpack - Sistema Integrado ===');
-            console.log('DeluxAI API: Local (http://localhost:5001) + Externa (https://deluxgtav.netlify.app)');
-            console.log('Página carregada, inicializando...');
-            
-            loadTheme();
-            loadUserData();
-            
-            // Initialize Google Sign-In
-            setTimeout(initializeGoogleSignIn, 500);
-            
-            // Initialize Chat Status - começa verificando API local
-            setTimeout(checkChatStatus, 1000);
-            
-            // Aguardar Firebase ficar pronto e então carregar dados
-            setTimeout(async () => {
-                if (isFirebaseReady) {
-                    await loadGlobalStats();
-                    await loadBugReports();
-                } else {
-                    console.log('Firebase não pronto, usando dados locais');
-                    loadLocalStats();
-                }
-            }, 2000);
-        });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(e) {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-            
-            if (mobileMenu && mobileMenuBtn && mobileMenu.style.display === 'block' && 
-                !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-                mobileMenu.style.display = 'none';
-            }
-        });
-
-        // Smooth scrolling for better UX
-        document.querySelectorAll('a[onclick]').forEach(link => {
-            link.addEventListener('click', function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        });
-
-        console.log('=== DeluxAI Sistema Integrado Carregado ===');
-        console.log('✅ API Local: http://localhost:5001');
-        console.log('✅ API Externa: https://deluxgtav.netlify.app');
-        console.log('✅ Firebase: Configurado');
-        console.log('✅ Google Auth: Configurado');
-        console.log('============================================');
-    </script>
-</body>
-</html>
